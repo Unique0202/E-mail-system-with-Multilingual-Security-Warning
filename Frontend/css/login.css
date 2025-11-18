@@ -1,0 +1,178 @@
+/* Import a nice font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root {
+    --bg-color: #0f1115;
+    --card-bg: #181b21;
+    --input-bg: #22262e;
+    --primary: #3b82f6; /* Modern Bright Blue */
+    --primary-hover: #2563eb;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border: #2d3342;
+    --error: #ef4444;
+    --radius: 12px;
+    --transition: all 0.2s ease-in-out;
+}
+
+body {
+    background-color: var(--bg-color);
+    /* Subtle mesh gradient background */
+    background-image: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 40%);
+    color: var(--text-main);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Main Card Container */
+.container {
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Tab System */
+.tabs {
+    display: flex;
+    background: var(--input-bg);
+    padding: 4px;
+    border-radius: var(--radius);
+    margin-bottom: 24px;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.tab-btn:hover {
+    color: var(--text-main);
+}
+
+.tab-btn.active {
+    background: var(--card-bg);
+    color: var(--primary);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    font-weight: 600;
+}
+
+/* Forms */
+.auth-form h2 {
+    margin: 0 0 20px 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+    color: var(--text-main);
+}
+
+input, select {
+    width: 100%;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-main);
+    font-size: 0.95rem;
+    outline: none;
+    transition: var(--transition);
+    box-sizing: border-box;
+}
+
+input:focus, select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+input::placeholder {
+    color: #555d6d;
+}
+
+/* Buttons */
+button[id^="submit"] {
+    width: 100%;
+    padding: 14px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: var(--transition);
+}
+
+button[id^="submit"]:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+button[id^="submit"]:active {
+    transform: translateY(0);
+}
+
+/* QR Code Section */
+#qr-container {
+    margin-top: 20px;
+    text-align: center;
+    background: white; /* QR codes need white bg to scan reliably */
+    padding: 15px;
+    border-radius: var(--radius);
+    animation: fadeIn 0.5s ease;
+}
+
+#qr-container img {
+    max-width: 150px;
+    display: block;
+    margin: 0 auto 10px auto;
+}
+
+#qr-container p {
+    color: #333;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* Utilities */
+.hidden {
+    display: none;
+}
+
+.error-msg {
+    color: var(--error);
+    font-size: 0.85rem;
+    text-align: center;
+    margin-top: 15px;
+    min-height: 20px;
+}
+
+/* Animation */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-form {
+    animation: fadeIn 0.4s ease-out;
+}

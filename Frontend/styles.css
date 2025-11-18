@@ -1,0 +1,47 @@
+:root {
+    --bg: #1e1e1e;
+    --sidebar: #252526;
+    --text: #cccccc;
+    --accent: #007acc;
+    --border: #3e3e42;
+    --danger: #f44336;
+    --warning: #ff9800;
+    --success: #4caf50;
+}
+
+body { margin: 0; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); height: 100vh; overflow: hidden; }
+.hidden { display: none !important; }
+.error-msg { color: var(--danger); margin-top: 10px; }
+
+/* Auth Screen */
+.container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+.auth-form { background: var(--sidebar); padding: 20px; border-radius: 8px; width: 300px; border: 1px solid var(--border); }
+input, select, textarea { width: 100%; padding: 8px; margin: 8px 0; background: #333; border: 1px solid var(--border); color: white; box-sizing: border-box; }
+button { width: 100%; padding: 10px; background: var(--accent); color: white; border: none; cursor: pointer; margin-top: 10px; }
+button:hover { opacity: 0.9; }
+.tabs { margin-bottom: 20px; }
+.tab-btn { width: auto; background: transparent; border-bottom: 2px solid transparent; }
+.tab-btn.active { border-bottom: 2px solid var(--accent); }
+
+/* App Screen */
+.app-container { display: flex; height: 100vh; }
+.sidebar { width: 200px; background: var(--sidebar); padding: 10px; border-right: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+.user-profile { font-weight: bold; padding: 10px; border-bottom: 1px solid var(--border); margin-bottom: 10px; word-break: break-all; }
+.logout-btn { background: var(--danger); margin-top: auto; }
+
+.main-content { flex: 1; padding: 20px; overflow-y: auto; }
+.email-list-item { background: #2d2d30; padding: 15px; margin-bottom: 10px; cursor: pointer; border-left: 4px solid transparent; }
+.email-list-item:hover { background: #3e3e42; }
+
+/* Security Badges */
+.badge-green { border-left-color: var(--success); }
+.badge-yellow { border-left-color: var(--warning); }
+.badge-red { border-left-color: var(--danger); }
+
+.security-tag { font-size: 0.8em; padding: 2px 6px; border-radius: 4px; margin-left: 10px; color: #1e1e1e; font-weight: bold; }
+.tag-safe { background: var(--success); }
+.tag-caution { background: var(--warning); }
+.tag-danger { background: var(--danger); }
+
+.warnings-box { background: rgba(244, 67, 54, 0.1); border: 1px solid var(--danger); padding: 10px; margin: 10px 0; }
+.email-body { white-space: pre-wrap; line-height: 1.5; margin-top: 20px; }

@@ -1,0 +1,201 @@
+/* Shared Design Language */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+:root {
+    --bg-main: #0f1115;       /* Deepest dark */
+    --bg-sidebar: #181b21;    /* Sidebar/Card bg */
+    --bg-element: #22262e;    /* Inputs/Items */
+    --bg-hover: #2d3342;
+    --primary: #3b82f6;
+    --text-main: #e2e8f0;
+    --text-muted: #94a3b8;
+    --border: #2d3342;
+    
+    --status-green: #10b981;
+    --status-yellow: #f59e0b;
+    --status-red: #ef4444;
+    
+    --radius: 12px;
+    --transition: all 0.2s ease;
+}
+
+/* Global Reset */
+* { box-sizing: border-box; }
+
+body { 
+    margin: 0; 
+    background: var(--bg-main); 
+    color: var(--text-main); 
+    font-family: 'Inter', sans-serif; 
+    height: 100vh; 
+    overflow: hidden; /* Prevent body scroll, handle in main-content */
+}
+
+.app-container { 
+    display: flex; 
+    height: 100vh; 
+    width: 100vw;
+}
+
+/* --- Sidebar Styling --- */
+.sidebar { 
+    width: 240px; /* Slightly wider for better readability */
+    background: var(--bg-sidebar); 
+    padding: 20px; 
+    border-right: 1px solid var(--border); 
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+/* Sidebar Title/Header (Optional, if you add one later) */
+.sidebar h3 {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    padding-left: 10px;
+}
+
+/* Sidebar Buttons (Navigation Style) */
+.sidebar button { 
+    width: 100%; 
+    padding: 12px 16px; 
+    background: transparent; 
+    color: var(--text-muted); 
+    border: none; 
+    border-radius: 8px;
+    cursor: pointer; 
+    margin-bottom: 4px; 
+    text-align: left; 
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sidebar button:hover {
+    background: var(--bg-hover);
+    color: var(--text-main);
+}
+
+/* Active state (You can toggle this class with JS) */
+.sidebar button.active {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--primary);
+}
+
+/* Logout Button (Pushed to bottom) */
+.logout-btn { 
+    margin-top: auto; 
+    color: var(--status-red) !important;
+    background: rgba(239, 68, 68, 0.1) !important;
+}
+.logout-btn:hover {
+    background: rgba(239, 68, 68, 0.2) !important;
+}
+
+/* --- Main Content Area --- */
+.main-content { 
+    flex: 1; 
+    padding: 30px; 
+    overflow-y: auto; 
+    background-color: var(--bg-main);
+    /* Subtle pattern to match login */
+    background-image: radial-gradient(circle at 90% 10%, rgba(59, 130, 246, 0.05) 0%, transparent 20%);
+}
+
+/* --- Email Items (Cards) --- */
+.email-item { 
+    background: var(--bg-sidebar); 
+    padding: 16px 20px; 
+    margin-bottom: 12px; 
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    cursor: pointer; 
+    transition: var(--transition);
+    position: relative;
+    overflow: hidden;
+}
+
+.email-item:hover { 
+    background: var(--bg-element);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    border-color: var(--text-muted);
+}
+
+/* Status Badges (Stripes) */
+.email-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    /* Inherit color from classes below */
+    background: currentColor; 
+}
+
+.badge-green { border-left: none; color: var(--status-green); }
+.badge-green::before { background: var(--status-green); }
+
+.badge-yellow { border-left: none; color: var(--status-yellow); }
+.badge-yellow::before { background: var(--status-yellow); }
+
+.badge-red { border-left: none; color: var(--status-red); }
+.badge-red::before { background: var(--status-red); }
+
+/* Typography inside email item */
+.email-item strong {
+    display: block;
+    color: var(--text-main);
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.email-item span {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* --- Inputs & Textarea (Compose) --- */
+input, textarea { 
+    width: 100%; 
+    padding: 12px 16px; 
+    margin: 8px 0 16px 0; 
+    background: var(--bg-element); 
+    border: 1px solid var(--border); 
+    border-radius: var(--radius); 
+    color: var(--text-main); 
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: var(--transition);
+}
+
+input:focus, textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Utilities */
+.hidden { display: none !important; }
+
+/* Custom Scrollbar (Webkit) */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-main);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}

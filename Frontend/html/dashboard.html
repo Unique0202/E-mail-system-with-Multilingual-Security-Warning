@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Secure Email</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+    <div class="app-container">
+        <div class="sidebar">
+            <div id="user-display" class="user-profile">Loading...</div>
+            <button id="nav-compose">✉ Compose</button>
+            <button id="nav-inbox">📥 Inbox</button>
+            <button id="nav-sent">📤 Sent</button>
+            <button id="nav-security">🛡️ Security Report</button>
+            <button id="nav-logout" class="logout-btn">🚪 Logout</button>
+        </div>
+
+        <div class="main-content">
+            <!-- Inbox/Sent View -->
+            <div id="view-list">
+                <h2 id="folder-title">Inbox</h2>
+                <div id="email-list"></div>
+            </div>
+
+            <!-- Compose View -->
+            <div id="view-compose" class="hidden">
+                <h2>Compose Secure Email</h2>
+                <input type="email" id="comp-to" placeholder="Recipient Email">
+                <input type="text" id="comp-subject" placeholder="Subject">
+                <textarea id="comp-body" rows="15" placeholder="Message..."></textarea>
+                <div id="link-warnings" class="warnings-box hidden"></div>
+                <button id="btn-send">Send Securely</button>
+                <button id="btn-scan-links">🔍 Scan Links</button>
+            </div>
+
+            <!-- Security Report View -->
+            <div id="view-security" class="hidden">
+                <h2>Security Report</h2>
+                <div id="security-report"></div>
+            </div>
+
+            <!-- Email Detail View -->
+            <div id="view-email-detail" class="hidden">
+                <button id="btn-back">← Back</button>
+                <div class="email-header">
+                    <h2 id="detail-subject">Subject</h2>
+                    <div id="security-badge" class="badge">Checking Security...</div>
+                    <p>From: <span id="detail-from"></span></p>
+                    <p>To: <span id="detail-to"></span></p>
+                    <p>Date: <span id="detail-date"></span></p>
+                </div>
+                <div id="security-warnings" class="warnings-box hidden"></div>
+                <div class="email-actions">
+                    <button id="btn-flag-sender">🚩 Flag Sender</button>
+                    <button id="btn-mark-safe">✅ Mark Safe</button>
+                </div>
+                <div id="detail-body" class="email-body"></div>
+            </div>
+        </div>
+    </div>
+    <script src="../js/dashboard.js"></script>
+</body>
+</html>

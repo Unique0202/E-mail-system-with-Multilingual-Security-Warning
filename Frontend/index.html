@@ -3,196 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multilingual Email Security System</title>
-    <link rel="stylesheet" href="css/style.css">
-    <style>
-        .welcome-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        
-        .welcome-card {
-            background: white;
-            border-radius: 15px;
-            padding: 50px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 500px;
-            width: 90%;
-        }
-        
-        .welcome-logo {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-        
-        .welcome-title {
-            color: #333;
-            font-size: 28px;
-            margin-bottom: 15px;
-        }
-        
-        .welcome-subtitle {
-            color: #666;
-            font-size: 16px;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-        
-        .feature-list {
-            text-align: left;
-            margin: 30px 0;
-        }
-        
-        .feature-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            padding: 10px;
-            border-radius: 8px;
-            transition: background-color 0.3s;
-        }
-        
-        .feature-item:hover {
-            background: #f8f9fa;
-        }
-        
-        .feature-icon {
-            font-size: 20px;
-            margin-right: 15px;
-            width: 30px;
-            text-align: center;
-        }
-        
-        .feature-text {
-            flex: 1;
-        }
-        
-        .feature-title {
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 5px;
-        }
-        
-        .feature-desc {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .btn-group {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-        
-        .btn-large {
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary-large {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-        
-        .btn-secondary-large {
-            background: #6c757d;
-            color: white;
-        }
-        
-        .btn-large:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
-        
-        .language-badge {
-            display: inline-block;
-            background: #e9ecef;
-            padding: 5px 10px;
-            border-radius: 15px;
-            font-size: 12px;
-            margin: 2px;
-            color: #495057;
-        }
-    </style>
+    <title>Secure Multilingual Email</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="welcome-container">
-        <div class="welcome-card">
-            <div class="welcome-logo">🛡️</div>
-            <h1 class="welcome-title">Multilingual Email Security</h1>
-            <p class="welcome-subtitle">
-                A secure email system with intelligent multilingual security warnings, 
-                community-driven trust signals, and enhanced user control.
-            </p>
+
+    <div id="auth-screen" class="container">
+        <div class="tabs">
+            <button id="btn-login" class="tab-btn active">Login</button>
+            <button id="btn-register" class="tab-btn">Register</button>
+        </div>
+
+        <div id="login-tab" class="auth-form">
+            <h2>Secure Login</h2>
+            <input type="email" id="login-email" placeholder="Email Address">
+            <input type="password" id="login-pass" placeholder="Password">
+            <input type="text" id="login-totp" placeholder="6-Digit 2FA Code" maxlength="6">
+            <button onclick="handleLogin()">Access Vault</button>
+            <p id="login-error" class="error-msg"></p>
+        </div>
+
+        <div id="register-tab" class="auth-form hidden">
+            <h2>Create Secure Account</h2>
+            <input type="email" id="reg-email" placeholder="Email">
+            <input type="password" id="reg-pass" placeholder="Password (Min 12 chars, Special, Upper)">
             
-            <div class="feature-list">
-                <div class="feature-item">
-                    <div class="feature-icon">🌐</div>
-                    <div class="feature-text">
-                        <div class="feature-title">Multilingual Security Warnings</div>
-                        <div class="feature-desc">Security alerts in your preferred language(s) for better comprehension</div>
-                    </div>
-                </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon">👥</div>
-                    <div class="feature-text">
-                        <div class="feature-title">Community-Driven Trust System</div>
-                        <div class="feature-desc">Color-coded sender safety indicators based on community flags</div>
-                    </div>
-                </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon">⚡</div>
-                    <div class="feature-text">
-                        <div class="feature-title">Bulk Management</div>
-                        <div class="feature-desc">Easy control over spam and subscriptions with bulk actions</div>
-                    </div>
-                </div>
-                
-                <div class="feature-item">
-                    <div class="feature-icon">🔒</div>
-                    <div class="feature-text">
-                        <div class="feature-title">Two-Factor Authentication</div>
-                        <div class="feature-desc">Enhanced security with 2FA and intelligent threat detection</div>
-                    </div>
-                </div>
+            <label>Primary Language</label>
+            <select id="reg-lang1">
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+            </select>
+
+            <label>Secondary Language</label>
+            <select id="reg-lang2">
+                <option value="hi">Hindi</option>
+                <option value="en">English</option>
+            </select>
+
+            <button onclick="handleRegister()">Generate Keys & Register</button>
+            
+            <div id="qr-container" class="hidden">
+                <p>Scan this with Authenticator App:</p>
+                <img id="qr-image" src="" alt="2FA QR">
+                <p><strong>Once scanned, switch to Login tab.</strong></p>
             </div>
-            
-            <div style="margin: 25px 0;">
-                <h3 style="color: #333; margin-bottom: 10px;">Supported Languages</h3>
-                <div>
-                    <span class="language-badge">English</span>
-                    <span class="language-badge">Spanish</span>
-                    <span class="language-badge">French</span>
-                    <span class="language-badge">German</span>
-                    <span class="language-badge">Hindi</span>
-                    <span class="language-badge">Chinese</span>
+            <p id="reg-error" class="error-msg"></p>
+        </div>
+    </div>
+
+    <div id="app-screen" class="app-container hidden">
+        <div class="sidebar">
+            <div class="user-profile" id="user-display">user@example.com</div>
+            <button onclick="showCompose()">✉ Compose</button>
+            <button onclick="loadInbox()">📥 Inbox</button>
+            <button onclick="loadSent()">📤 Sent</button>
+            <button onclick="logout()" class="logout-btn">🚪 Logout</button>
+        </div>
+
+        <div class="main-content">
+            <div id="email-list-view">
+                <h3 id="folder-title">Inbox</h3>
+                <div id="email-list" class="email-list">
+                    </div>
+            </div>
+
+            <div id="compose-view" class="hidden">
+                <h3>Compose Secure Email</h3>
+                <input type="email" id="comp-to" placeholder="Recipient Email">
+                <input type="text" id="comp-subject" placeholder="Subject">
+                <textarea id="comp-body" rows="15" placeholder="Message body..."></textarea>
+                <button onclick="sendEmail()">Send Encrypted</button>
+                <p id="comp-status"></p>
+            </div>
+
+            <div id="read-view" class="hidden">
+                <button onclick="backToList()">← Back</button>
+                <div class="email-header">
+                    <h2 id="read-subject">Subject</h2>
+                    <div id="security-badge" class="badge">Checking Security...</div>
+                    <p>From: <span id="read-from"></span></p>
+                    <p>Date: <span id="read-date"></span></p>
                 </div>
-            </div>
-            
-            <div class="btn-group">
-                <a href="login.html" class="btn-large btn-primary-large">Get Started</a>
-                <a href="#features" class="btn-large btn-secondary-large">Learn More</a>
-            </div>
-            
-            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef;">
-                <p style="color: #666; font-size: 12px;">
-                    Team Phishermen | Usable Security and Privacy Project
-                </p>
+                <div id="read-warnings" class="warnings-box hidden"></div>
+                <div id="read-body" class="email-body"></div>
             </div>
         </div>
     </div>
+
+    <script src="renderer.js"></script>
 </body>
 </html>
