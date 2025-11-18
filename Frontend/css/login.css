@@ -11,48 +11,84 @@
     --text-muted: #94a3b8;
     --border: #2d3342;
     --error: #ef4444;
+    --success: #10b981;
+    --warning: #f59e0b;
     --radius: 12px;
     --transition: all 0.2s ease-in-out;
 }
 
+* {
+    box-sizing: border-box;
+}
+
 body {
     background-color: var(--bg-color);
-    /* Subtle mesh gradient background */
     background-image: radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 40%);
     color: var(--text-main);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
+    padding: 20px;
 }
 
-/* Main Card Container */
+/* Main Card Container - FIXED HEIGHT WITH SCROLL */
 .container {
     background: var(--card-bg);
-    padding: 2.5rem;
     border-radius: 16px;
     width: 100%;
-    max-width: 400px;
+    max-width: 450px;
+    max-height: 90vh; /* Limit maximum height to viewport */
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
+    overflow: hidden; /* Prevent entire container from scrolling */
 }
 
-/* Tab System */
+/* Scrollable Content Area */
+.auth-form {
+    flex: 1;
+    overflow-y: auto; /* Enable vertical scrolling */
+    padding: 30px;
+    max-height: calc(90vh - 80px); /* Account for tabs height */
+}
+
+/* Custom Scrollbar */
+.auth-form::-webkit-scrollbar {
+    width: 6px;
+}
+
+.auth-form::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.auth-form::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 3px;
+}
+
+.auth-form::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Tab System - FIXED AT TOP */
 .tabs {
     display: flex;
     background: var(--input-bg);
     padding: 4px;
-    border-radius: var(--radius);
-    margin-bottom: 24px;
+    border-radius: var(--radius) var(--radius) 0 0;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    flex-shrink: 0; /* Prevent tabs from shrinking */
 }
 
 .tab-btn {
     flex: 1;
-    padding: 10px;
+    padding: 12px;
     font-size: 0.9rem;
     font-weight: 500;
     color: var(--text-muted);
@@ -76,17 +112,28 @@ body {
 
 /* Forms */
 .auth-form h2 {
-    margin: 0 0 20px 0;
+    margin: 0 0 25px 0;
     font-size: 1.5rem;
     font-weight: 600;
     text-align: center;
     color: var(--text-main);
 }
 
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-main);
+    font-size: 0.9rem;
+}
+
 input, select {
     width: 100%;
     padding: 14px 16px;
-    margin-bottom: 16px;
     background: var(--input-bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
@@ -106,6 +153,79 @@ input::placeholder {
     color: #555d6d;
 }
 
+/* Input Hints */
+.input-hint {
+    font-size: 0.75rem;
+    margin-top: 6px;
+    padding: 5px 8px;
+    border-radius: 4px;
+    line-height: 1.4;
+}
+
+.input-hint.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning);
+    border-left: 3px solid var(--warning);
+}
+
+.input-hint.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--error);
+    border-left: 3px solid var(--error);
+}
+
+.input-hint.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+    border-left: 3px solid var(--success);
+}
+
+/* Password Requirements - COMPACT DESIGN */
+.password-requirements {
+    background: var(--input-bg);
+    padding: 12px;
+    border-radius: var(--radius);
+    margin-top: 10px;
+    border: 1px solid var(--border);
+}
+
+.password-requirements h4 {
+    margin: 0 0 8px 0;
+    font-size: 0.85rem;
+    color: var(--text-main);
+    font-weight: 600;
+}
+
+.password-requirements ul {
+    margin: 0;
+    padding-left: 0;
+    font-size: 0.75rem;
+    list-style: none;
+}
+
+.password-requirements li {
+    margin-bottom: 4px;
+    padding: 2px 0;
+}
+
+.requirement-met {
+    color: var(--success);
+}
+
+.requirement-met::before {
+    content: '✓ ';
+    font-weight: bold;
+}
+
+.requirement-unmet {
+    color: var(--text-muted);
+}
+
+.requirement-unmet::before {
+    content: '○ ';
+    font-weight: bold;
+}
+
 /* Buttons */
 button[id^="submit"] {
     width: 100%;
@@ -117,46 +237,79 @@ button[id^="submit"] {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 8px;
+    margin-top: 10px;
     transition: var(--transition);
 }
 
-button[id^="submit"]:hover {
+button[id^="submit"]:hover:not(:disabled) {
     background: var(--primary-hover);
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-button[id^="submit"]:active {
+button[id^="submit"]:active:not(:disabled) {
     transform: translateY(0);
+}
+
+button[id^="submit"]:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
 }
 
 /* QR Code Section */
 #qr-container {
     margin-top: 20px;
     text-align: center;
-    background: white; /* QR codes need white bg to scan reliably */
+    background: white;
     padding: 15px;
     border-radius: var(--radius);
     animation: fadeIn 0.5s ease;
 }
 
 #qr-container img {
-    max-width: 150px;
+    max-width: 180px;
     display: block;
     margin: 0 auto 10px auto;
 }
 
-#qr-container p {
-    color: #333;
-    font-size: 0.85rem;
-    font-weight: 600;
-    margin: 0;
+.success-message {
+    text-align: center;
+    margin-bottom: 15px;
+    padding: 12px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: var(--radius);
+    border: 1px solid var(--success);
+}
+
+.success-message h3 {
+    margin: 0 0 8px 0;
+    color: var(--success);
+    font-size: 1.1rem;
+}
+
+.setup-instructions {
+    margin-top: 15px;
+    padding: 12px;
+    background: var(--input-bg);
+    border-radius: var(--radius);
+    font-size: 0.8rem;
+    text-align: left;
+}
+
+.setup-instructions ol {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.setup-instructions li {
+    margin-bottom: 4px;
+    line-height: 1.4;
 }
 
 /* Utilities */
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 .error-msg {
@@ -165,6 +318,7 @@ button[id^="submit"]:active {
     text-align: center;
     margin-top: 15px;
     min-height: 20px;
+    line-height: 1.4;
 }
 
 /* Animation */
@@ -176,128 +330,77 @@ button[id^="submit"]:active {
 .auth-form {
     animation: fadeIn 0.4s ease-out;
 }
-/* Add these styles to your existing login.css */
 
-.input-group {
-    margin-bottom: 20px;
-}
-
-.input-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: var(--text-main);
-}
-
-.input-hint {
-    font-size: 0.8rem;
-    margin-top: 5px;
-    padding: 5px;
-    border-radius: 4px;
-}
-
-.input-hint.warning {
-    background: rgba(245, 158, 11, 0.1);
-    color: var(--status-yellow);
-    border-left: 3px solid var(--status-yellow);
-}
-
-.input-hint.error {
-    background: rgba(239, 68, 68, 0.1);
-    color: var(--status-red);
-    border-left: 3px solid var(--status-red);
-}
-
-.input-hint.success {
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--status-green);
-    border-left: 3px solid var(--status-green);
-}
-
-.password-requirements {
-    background: var(--input-bg);
-    padding: 15px;
-    border-radius: var(--radius);
-    margin-top: 10px;
-    border: 1px solid var(--border);
-}
-
-.password-requirements h4 {
-    margin: 0 0 10px 0;
-    font-size: 0.9rem;
-    color: var(--text-main);
-}
-
-.password-requirements ul {
-    margin: 0;
-    padding-left: 20px;
-    font-size: 0.8rem;
-}
-
-.requirement-met {
-    color: var(--status-green);
-    list-style-type: '✓ ';
-}
-
-.requirement-unmet {
-    color: var(--text-muted);
-    list-style-type: '○ ';
-}
-
-.success-message {
-    text-align: center;
-    margin-bottom: 20px;
-    padding: 15px;
-    background: rgba(16, 185, 129, 0.1);
-    border-radius: var(--radius);
-    border: 1px solid var(--status-green);
-}
-
-.success-message h3 {
-    margin: 0 0 10px 0;
-    color: var(--status-green);
-}
-
-.setup-instructions {
-    margin-top: 20px;
-    padding: 15px;
-    background: var(--input-bg);
-    border-radius: var(--radius);
-    font-size: 0.9rem;
-}
-
-.setup-instructions ol {
-    margin: 10px 0;
-    padding-left: 20px;
-}
-
-.setup-instructions li {
-    margin-bottom: 5px;
-}
-
-/* Button loading state */
-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Enhanced input focus states */
-input:invalid {
-    border-color: var(--status-red);
-}
-
-input:valid {
-    border-color: var(--status-green);
-}
-
-/* Responsive improvements */
-@media (max-width: 480px) {
+/* Responsive Design */
+@media (max-height: 700px) {
     .container {
-        margin: 20px;
+        max-height: 95vh;
+    }
+    
+    .auth-form {
+        max-height: calc(95vh - 80px);
         padding: 20px;
+    }
+    
+    .input-group {
+        margin-bottom: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        max-width: 100%;
+        max-height: 95vh;
+    }
+    
+    .auth-form {
+        padding: 20px;
+        max-height: calc(95vh - 80px);
     }
     
     .password-requirements {
         padding: 10px;
+    }
+    
+    .password-requirements ul {
+        font-size: 0.7rem;
+    }
+}
+
+/* Compact mode for very small screens */
+@media (max-height: 600px) {
+    .auth-form {
+        padding: 15px;
+    }
+    
+    .auth-form h2 {
+        margin-bottom: 15px;
+        font-size: 1.3rem;
+    }
+    
+    .input-group {
+        margin-bottom: 12px;
+    }
+    
+    input, select {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+    
+    .password-requirements {
+        padding: 8px;
+    }
+    
+    .password-requirements h4 {
+        font-size: 0.8rem;
+        margin-bottom: 6px;
+    }
+    
+    .password-requirements li {
+        margin-bottom: 2px;
     }
 }
