@@ -18,9 +18,16 @@ logger = logging.getLogger(__name__)
 class EmailStorage:
     """Store emails on filesystem (Maildir format)"""
     
-    def __init__(self, base_path: str = '/opt/secure-email-app/maildata'):
+    def __init__(self, base_path: str = None):
+        if base_path is None:
+            # Use user's home directory instead of hardcoded path
+            app_dir = Path.home() / '.secure_email_app' / 'maildata'
+            app_dir.mkdir(parents=True, exist_ok=True)
+            base_path = str(app_dir)
+    
         self.base_path = Path(base_path)
         self.base_path.mkdir(parents=True, exist_ok=True)
+
     
     def _get_user_mailbox(self, email_address: str) -> Path:
         """Get user's mailbox directory"""

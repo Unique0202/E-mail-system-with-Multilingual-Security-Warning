@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Multilingual Email Security</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>Email Security</h2>
+                <p>Multilingual System</p>
+            </div>
+            
+            <ul class="sidebar-nav">
+                <li><a href="#" class="active" data-folder="inbox">📥 Inbox</a></li>
+                <li><a href="#" data-folder="spam">🚫 Spam</a></li>
+                <li><a href="#" data-folder="subscriptions">📰 Subscriptions</a></li>
+                <li><a href="#" data-folder="sent">📤 Sent</a></li>
+                <li><a href="#" data-folder="drafts">📝 Drafts</a></li>
+                <li><a href="#" id="settingsBtn">⚙️ Settings</a></li>
+                <li><a href="#" id="logoutBtn">🚪 Logout</a></li>
+            </ul>
+            
+            <div class="language-section" style="margin-top: 30px;">
+                <h3>Security Languages</h3>
+                <div class="language-selector">
+                    <button class="lang-btn active">English</button>
+                    <button class="lang-btn">Spanish</button>
+                    <button class="lang-btn">French</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="header">
+                <h1>Email Inbox</h1>
+                <p>Secure multilingual email system with intelligent warnings</p>
+            </div>
+            
+            <!-- Bulk Actions -->
+            <div class="bulk-actions">
+                <h3>Bulk Management</h3>
+                <div class="action-buttons">
+                    <button class="btn-secondary" id="markSpamBtn">Mark as Spam</button>
+                    <button class="btn-secondary" id="deleteBtn">Delete Selected</button>
+                    <button class="btn-danger" id="blockSendersBtn">Block Senders</button>
+                </div>
+            </div>
+            
+            <!-- Email List -->
+            <div class="email-list" id="emailList">
+                <!-- Emails will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <script src="js/email-manager.js"></script>
+    <script src="js/renderer.js"></script>
+</body>
+</html>
