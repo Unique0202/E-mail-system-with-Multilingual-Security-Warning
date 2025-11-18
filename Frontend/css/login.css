@@ -176,3 +176,128 @@ button[id^="submit"]:active {
 .auth-form {
     animation: fadeIn 0.4s ease-out;
 }
+/* Add these styles to your existing login.css */
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+.input-hint {
+    font-size: 0.8rem;
+    margin-top: 5px;
+    padding: 5px;
+    border-radius: 4px;
+}
+
+.input-hint.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--status-yellow);
+    border-left: 3px solid var(--status-yellow);
+}
+
+.input-hint.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--status-red);
+    border-left: 3px solid var(--status-red);
+}
+
+.input-hint.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--status-green);
+    border-left: 3px solid var(--status-green);
+}
+
+.password-requirements {
+    background: var(--input-bg);
+    padding: 15px;
+    border-radius: var(--radius);
+    margin-top: 10px;
+    border: 1px solid var(--border);
+}
+
+.password-requirements h4 {
+    margin: 0 0 10px 0;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+.password-requirements ul {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 0.8rem;
+}
+
+.requirement-met {
+    color: var(--status-green);
+    list-style-type: '✓ ';
+}
+
+.requirement-unmet {
+    color: var(--text-muted);
+    list-style-type: '○ ';
+}
+
+.success-message {
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(16, 185, 129, 0.1);
+    border-radius: var(--radius);
+    border: 1px solid var(--status-green);
+}
+
+.success-message h3 {
+    margin: 0 0 10px 0;
+    color: var(--status-green);
+}
+
+.setup-instructions {
+    margin-top: 20px;
+    padding: 15px;
+    background: var(--input-bg);
+    border-radius: var(--radius);
+    font-size: 0.9rem;
+}
+
+.setup-instructions ol {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.setup-instructions li {
+    margin-bottom: 5px;
+}
+
+/* Button loading state */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Enhanced input focus states */
+input:invalid {
+    border-color: var(--status-red);
+}
+
+input:valid {
+    border-color: var(--status-green);
+}
+
+/* Responsive improvements */
+@media (max-width: 480px) {
+    .container {
+        margin: 20px;
+        padding: 20px;
+    }
+    
+    .password-requirements {
+        padding: 10px;
+    }
+}

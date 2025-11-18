@@ -239,10 +239,13 @@ ipcMain.handle('login', async (event, data) => {
 // 3. Register with Security Validation
 ipcMain.handle('register', async (event, data) => {
     try {
-        // Input validation
+        // Input validation with enhanced checks
         const email = BufferOverflowProtection.validateEmail(data.email);
         const password = BufferOverflowProtection.validatePassword(data.password);
-        const langs = JSON.stringify([data.lang1, data.lang2]);
+        
+        // Language validation
+        const languages = BufferOverflowProtection.validateLanguages(data.lang1, data.lang2);
+        const langs = JSON.stringify(languages);
 
         const hash = await bcrypt.hash(password, 10);
         const secret = authenticator.generateSecret();
@@ -269,7 +272,10 @@ ipcMain.handle('register', async (event, data) => {
             );
         });
     } catch (error) {
-        logSecurityEvent('registration_failed', 'warning', data.email, { reason: 'validation_error', error: error.message });
+        logSecurityEvent('registration_failed', 'warning', data.email, { 
+            reason: 'validation_error', 
+            error: error.message 
+        });
         return { success: false, error: error.message };
     }
 });

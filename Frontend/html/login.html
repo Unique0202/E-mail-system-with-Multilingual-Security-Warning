@@ -14,50 +14,114 @@
 
         <div id="login-tab" class="auth-form">
             <h2>Secure Login</h2>
-            <input type="email" id="login-email" placeholder="Email Address">
-            <input type="password" id="login-pass" placeholder="Password">
-            <input type="text" id="login-totp" placeholder="6-Digit 2FA Code" maxlength="6">
-            <button id="submit-login">Access Vault</button>
+            
+            <div class="input-group">
+                <label for="login-email">Email Address</label>
+                <input type="email" id="login-email" placeholder="your.email@example.com">
+                <div class="input-hint">Must contain @ symbol and valid domain</div>
+            </div>
+            
+            <div class="input-group">
+                <label for="login-pass">Password</label>
+                <input type="password" id="login-pass" placeholder="Enter your password">
+            </div>
+            
+            <div class="input-group">
+                <label for="login-totp">2FA Authentication Code</label>
+                <input type="text" id="login-totp" placeholder="6-digit code from authenticator app" maxlength="6">
+                <div class="input-hint">Enter the 6-digit code from your authenticator app</div>
+            </div>
+            
+            <button id="submit-login">Access Secure Vault</button>
             <p id="login-error" class="error-msg"></p>
         </div>
 
         <div id="register-tab" class="auth-form hidden">
-            <h2>Register</h2>
-            <input type="email" id="reg-email" placeholder="Email">
-            <input type="password" id="reg-pass" placeholder="Password (Min 12 chars)">
-            <select id="reg-lang1"><option value="en">English</option>
-                <option value="hi">Hindi</option>
-                <option value="be">Bengali</option>
-                <option value="te">Telugu</option>
-                <option value="hi">Hindi</option>
-                <option value="ta">Tamil</option>
-                <option value="mr">Marathi</option>
-                <option value="ur">Urdu</option>
-                <option value="pa">Punjabi</option>
-                <option value="gu">Gujarati</option>
-                <option value="kn">Kannada</option>
-                <option value="ml">Malayalam</option>
-                <option value="or">Odia</option>
-            </select>
-            <select id="reg-lang2"><option value="hi">Hindi</option>
-                <option value="en">English</option>
-                <option value="be">Bengali</option>
-                <option value="te">Telugu</option>
-                <option value="hi">Hindi</option>
-                <option value="ta">Tamil</option>
-                <option value="mr">Marathi</option>
-                <option value="ur">Urdu</option>
-                <option value="pa">Punjabi</option>
-                <option value="gu">Gujarati</option>
-                <option value="kn">Kannada</option>
-                <option value="ml">Malayalam</option>
-                <option value="or">Odia</option>
-            </select>
-            <button id="submit-register">Generate Keys</button>
+            <h2>Create Secure Account</h2>
+            
+            <div class="input-group">
+                <label for="reg-email">Email Address</label>
+                <input type="email" id="reg-email" placeholder="your.email@example.com">
+                <div class="input-hint">Must contain @ symbol and valid domain (e.g., user@example.com)</div>
+            </div>
+            
+            <div class="input-group">
+                <label for="reg-pass">Secure Password</label>
+                <input type="password" id="reg-pass" placeholder="Create strong password">
+                <div class="password-requirements">
+                    <h4>Password Requirements:</h4>
+                    <ul>
+                        <li id="req-length">✓ At least 12 characters long</li>
+                        <li id="req-upper">✓ One uppercase letter (A-Z)</li>
+                        <li id="req-lower">✓ One lowercase letter (a-z)</li>
+                        <li id="req-digit">✓ One number (0-9)</li>
+                        <li id="req-special">✓ One special character (!@#$%^&* etc.)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="reg-lang1">Primary Language</label>
+                <select id="reg-lang1">
+                    <option value="">Select primary language</option>
+                    <option value="en">English</option>
+                    <option value="hi">Hindi</option>
+                    <option value="bn">Bengali</option>
+                    <option value="te">Telugu</option>
+                    <option value="ta">Tamil</option>
+                    <option value="mr">Marathi</option>
+                    <option value="ur">Urdu</option>
+                    <option value="pa">Punjabi</option>
+                    <option value="gu">Gujarati</option>
+                    <option value="kn">Kannada</option>
+                    <option value="ml">Malayalam</option>
+                    <option value="or">Odia</option>
+                    <option value="as">Assamese</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                </select>
+            </div>
+
+            <div class="input-group">
+                <label for="reg-lang2">Secondary Language (Must be different)</label>
+                <select id="reg-lang2">
+                    <option value="">Select secondary language</option>
+                    <option value="en">English</option>
+                    <option value="hi">Hindi</option>
+                    <option value="bn">Bengali</option>
+                    <option value="te">Telugu</option>
+                    <option value="ta">Tamil</option>
+                    <option value="mr">Marathi</option>
+                    <option value="ur">Urdu</option>
+                    <option value="pa">Punjabi</option>
+                    <option value="gu">Gujarati</option>
+                    <option value="kn">Kannada</option>
+                    <option value="ml">Malayalam</option>
+                    <option value="or">Odia</option>
+                    <option value="as">Assamese</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                </select>
+                <div class="input-hint" id="lang-hint">Must be different from primary language</div>
+            </div>
+
+            <button id="submit-register">Generate Security Keys & Register</button>
             
             <div id="qr-container" class="hidden">
-                <img id="qr-image" src="" alt="QR Code">
-                <p>Scan this, then Login.</p>
+                <div class="success-message">
+                    <h3>✅ Registration Successful!</h3>
+                    <p>Scan this QR code with your authenticator app:</p>
+                </div>
+                <img id="qr-image" src="" alt="2FA QR Code">
+                <div class="setup-instructions">
+                    <p><strong>Setup Instructions:</strong></p>
+                    <ol>
+                        <li>Install Google Authenticator or Authy on your phone</li>
+                        <li>Scan the QR code above</li>
+                        <li>Save your backup codes in a secure location</li>
+                        <li>Switch to Login tab to access your account</li>
+                    </ol>
+                </div>
             </div>
             <p id="reg-error" class="error-msg"></p>
         </div>
