@@ -28,5 +28,15 @@
       "en"
     ],
     "totp_secret": "MOCK_SECRET"
+  },
+  {
+    "id": 1763580794938,
+    "email": "uni_test@gmail.com",
+    "password": "e3f6df4051d41f1ef19344979a386601f6c04fd9015843d00e8938b57281da2f",
+    "languages": [
+      "en",
+      "hi"
+    ],
+    "totp_secret": "QXSCU53TCH57T4BW"
   }
 ]

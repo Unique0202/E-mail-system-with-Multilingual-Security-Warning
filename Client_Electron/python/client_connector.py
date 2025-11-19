@@ -3,7 +3,9 @@ import json
 import urllib.request
 import urllib.error
 
-# Configure this to your Campus Machine IP
+# --- CONFIGURATION ---
+# If running locally for testing, use localhost. 
+# If running on remote, use that IP.
 SERVER_URL = "http://192.168.2.234:3000" 
 
 def make_request(endpoint, method, payload=None):
@@ -15,15 +17,30 @@ def make_request(endpoint, method, payload=None):
     
     try:
         with urllib.request.urlopen(req) as response:
-            print(response.read().decode('utf-8'))
+            # Read response
+            result = response.read().decode('utf-8')
+            # PRINT ONLY THE RESULT
+            sys.stdout.write(result)
+            sys.stdout.flush()
+            
     except urllib.error.HTTPError as e:
-        # Return the error from server
-        print(e.read().decode('utf-8'))
+        # The server returned 400/401/500, but usually sends a JSON body (e.g., error message)
+        error_content = e.read().decode('utf-8')
+        sys.stdout.write(error_content)
+        sys.stdout.flush()
+        
     except Exception as e:
-        print(json.dumps({"success": False, "error": str(e)}))
+        # System/Network Error: create a manual JSON error
+        error_json = json.dumps({"success": False, "error": str(e)})
+        sys.stdout.write(error_json)
+        sys.stdout.flush()
 
 if __name__ == "__main__":
-    # Usage: python client_connector.py <METHOD> <ENDPOINT> <JSON_DATA>
+    # Force UTF-8 encoding for stdout to prevent Windows crashing on emojis
+    if sys.platform == "win32":
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+
     method = sys.argv[1]
     endpoint = sys.argv[2]
     

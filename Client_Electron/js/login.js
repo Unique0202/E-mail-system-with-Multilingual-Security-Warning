@@ -111,6 +111,9 @@ async function handleLogin() {
     const res = await window.api.login({ email, password, totp });
 
     if (res.success) {
+        // --- THE FIX: Save the user to LocalStorage ---
+        window.localStorage.setItem('currentUser', JSON.stringify(res.user));
+        
         window.api.changePage('dashboard');
     } else {
         document.getElementById('login-error').innerText = res.error;
