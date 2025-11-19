@@ -4,7 +4,7 @@ import urllib.request
 import urllib.error
 
 # Configure this to your Campus Machine IP
-SERVER_URL = "http://192.168.1.XXX:3000" 
+SERVER_URL = "http://192.168.2.234:3000" 
 
 def make_request(endpoint, method, payload=None):
     url = f"{SERVER_URL}{endpoint}"
