@@ -140,24 +140,35 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(json.dumps({"success": False, "error": "Email exists"}).encode())
             return
 
-        # Simple hashing (In production, use a library, but avoiding dependencies here)
-        # We use standard lib hashlib
+        # Simple hashing
         pwd_hash = hashlib.sha256(data.get('password').encode()).hexdigest()
         
+        # 1. Generate a random secret (Manual generation since no external libs)
+        # A simple way to get a random base32-like string using standard libs
+        random_bytes = os.urandom(10) 
+        secret = base64.b32encode(random_bytes).decode('utf-8')
+
         new_user = {
             "id": int(time.time() * 1000),
             "email": email,
             "password": pwd_hash,
             "languages": [data.get('lang1'), data.get('lang2')],
-            "totp_secret": "MOCK_SECRET" # Without 'otplib', we simulate 2FA secret generation
+            "totp_secret": secret
         }
         
         users.append(new_user)
         db_write('users', users)
         
-        # Return success (QR code generation happens on client to save server deps)
+        # 2. Construct the OTP Auth URL manually
+        # Format: otpauth://totp/Label:Email?secret=SECRET&issuer=Label
+        otpauth_url = f"otpauth://totp/SecureMail:{email}?secret={secret}&issuer=SecureMail"
+
+        # 3. Send URL to client (Client will draw the QR code)
         self._set_headers(200)
-        self.wfile.write(json.dumps({"success": True, "mock_secret": "MOCK_SECRET"}).encode())
+        self.wfile.write(json.dumps({
+            "success": True, 
+            "otpauth_url": otpauth_url 
+        }).encode())
 
     def handle_login(self, data):
         users = db_read('users')

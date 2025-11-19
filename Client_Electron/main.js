@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
+// 1. Re-import QRCode (it is in your node_modules)
+const QRCode = require('qrcode'); 
 
 let mainWindow;
 
@@ -28,24 +30,36 @@ ipcMain.handle('api-request', async (event, { endpoint, method, body }) => {
             args.push(JSON.stringify(body));
         }
 
-        // Spawn python process
-        const python = spawn('python', args); // Or 'python3' on Mac/Linux
+        const python = spawn('python', args);
 
-        let result = '';
+        let resultData = '';
         
         python.stdout.on('data', (data) => {
-            result += data.toString();
+            resultData += data.toString();
         });
 
         python.stderr.on('data', (data) => {
             console.error(`Python Error: ${data}`);
         });
 
-        python.on('close', (code) => {
+        python.on('close', async (code) => {
             try {
-                resolve(JSON.parse(result));
+                // 2. Parse the JSON from Python
+                const result = JSON.parse(resultData);
+
+                // 3. INTERCEPT REGISTRATION: Generate QR Code here
+                if (endpoint === '/api/auth/register' && result.success && result.otpauth_url) {
+                    try {
+                        // Convert text URL to Image Data URI
+                        result.qrCode = await QRCode.toDataURL(result.otpauth_url);
+                    } catch (qrErr) {
+                        console.error("QR Generation failed:", qrErr);
+                    }
+                }
+
+                resolve(result);
             } catch (e) {
-                resolve({ success: false, error: "Failed to parse Python response: " + result });
+                resolve({ success: false, error: "Failed to parse Python response: " + resultData });
             }
         });
     });
