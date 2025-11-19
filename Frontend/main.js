@@ -423,3 +423,235 @@ ipcMain.handle('get-security-report', (event) => {
         });
     });
 });
+
+
+// Add these new IPC handlers to your main.js
+
+// Get email statistics
+ipcMain.handle('get-email-stats', (event) => {
+    if (!authenticatedUser) return { success: false, error: "Unauthorized" };
+    
+    return new Promise((resolve) => {
+        db.all(`SELECT 
+                folder,
+                COUNT(*) as count,
+                SUM(is_read) as read_count,
+                SUM(is_flagged) as flagged_count
+            FROM emails 
+            WHERE recipient_email = ? AND is_deleted = 0
+            GROUP BY folder`,
+            [authenticatedUser.email], (err, rows) => {
+            if (err) {
+                resolve({ success: false, error: err.message });
+            } else {
+                const stats = {
+                    inbox: 0,
+                    spam: 0,
+                    sent: 0,
+                    trash: 0,
+                    read: 0,
+                    flagged: 0
+                };
+
+                rows.forEach(row => {
+                    stats[row.folder] = row.count;
+                    if (row.folder === 'inbox') {
+                        stats.read = row.read_count || 0;
+                        stats.flagged = row.flagged_count || 0;
+                    }
+                });
+
+                resolve({ success: true, stats });
+            }
+        });
+    });
+});
+
+// Mark email as spam
+ipcMain.handle('mark-as-spam', async (event, emailId, reason = 'User reported') => {
+    if (!authenticatedUser) return { success: false, error: "Unauthorized" };
+
+    return new Promise((resolve) => {
+        db.serialize(() => {
+            // Update email
+            db.run(`UPDATE emails SET is_spam = 1, folder = 'spam' WHERE id = ? AND recipient_email = ?`,
+                [emailId, authenticatedUser.email]);
+
+            // Get sender for reputation update
+            db.get(`SELECT sender_email FROM emails WHERE id = ?`, [emailId], (err, email) => {
+                if (email) {
+                    // Update sender reputation
+                    updateSenderReputation(email.sender_email, authenticatedUser.email, 'spam_report');
+                    
+                    // Log security event
+                    logSecurityEvent('email_marked_spam', 'info', authenticatedUser.email, {
+                        emailId,
+                        sender: email.sender_email,
+                        reason
+                    });
+                }
+            });
+
+            resolve({ success: true });
+        });
+    });
+});
+
+// Get spam emails
+ipcMain.handle('get-spam', (event) => {
+    if (!authenticatedUser) return [];
+    
+    return new Promise((resolve) => {
+        db.all(`SELECT e.*, r.safe_score, r.badge_color FROM emails e 
+                LEFT JOIN sender_reputation r ON e.sender_email = r.email
+                WHERE recipient_email = ? AND folder = 'spam' AND is_deleted = 0 
+                ORDER BY sent_at DESC`,
+                [authenticatedUser.email], (err, rows) => {
+            if (err) {
+                resolve([]);
+                return;
+            }
+
+            const enhancedRows = rows.map(row => {
+                const reputation = {
+                    safe_score: row.safe_score || 50,
+                    total_flags: row.total_flags || 0
+                };
+                
+                const securityAnalysis = EmailSecurityAnalyzer.analyzeEmail(
+                    row, 
+                    reputation, 
+                    authenticatedUser.languages
+                );
+
+                return {
+                    ...row,
+                    security_analysis: securityAnalysis
+                };
+            });
+
+            resolve(enhancedRows);
+        });
+    });
+});
+
+// Delete email (move to trash)
+ipcMain.handle('delete-email', (event, emailId) => {
+    if (!authenticatedUser) return { success: false, error: "Unauthorized" };
+
+    return new Promise((resolve) => {
+        db.run(`UPDATE emails SET is_deleted = 1, deleted_at = datetime('now'), folder = 'trash' 
+                WHERE id = ? AND recipient_email = ?`,
+                [emailId, authenticatedUser.email], function(err) {
+            if (err) {
+                resolve({ success: false, error: err.message });
+            } else {
+                logSecurityEvent('email_deleted', 'info', authenticatedUser.email, { emailId });
+                resolve({ success: true, changes: this.changes });
+            }
+        });
+    });
+});
+
+// Permanent delete
+ipcMain.handle('permanent-delete-email', (event, emailId) => {
+    if (!authenticatedUser) return { success: false, error: "Unauthorized" };
+
+    return new Promise((resolve) => {
+        db.run(`DELETE FROM emails WHERE id = ? AND recipient_email = ?`,
+                [emailId, authenticatedUser.email], function(err) {
+            if (err) {
+                resolve({ success: false, error: err.message });
+            } else {
+                logSecurityEvent('email_permanent_deleted', 'info', authenticatedUser.email, { emailId });
+                resolve({ success: true, changes: this.changes });
+            }
+        });
+    });
+});
+
+// Empty trash
+ipcMain.handle('empty-trash', (event) => {
+    if (!authenticatedUser) return { success: false, error: "Unauthorized" };
+
+    return new Promise((resolve) => {
+        db.run(`DELETE FROM emails WHERE recipient_email = ? AND folder = 'trash'`,
+                [authenticatedUser.email], function(err) {
+            if (err) {
+                resolve({ success: false, error: err.message });
+            } else {
+                logSecurityEvent('trash_emptied', 'info', authenticatedUser.email, { deleted: this.changes });
+                resolve({ success: true, deleted: this.changes });
+            }
+        });
+    });
+});
+
+// Flag email
+ipcMain.handle('flag-email', async (event, emailId, reason, severity = 'medium') => {
+    if (!authenticatedUser) return { success: false, error: "Unauthorized" };
+
+    return new Promise((resolve) => {
+        db.serialize(() => {
+            // Mark email as flagged
+            db.run(`UPDATE emails SET is_flagged = 1 WHERE id = ?`, [emailId]);
+
+            // Get sender email
+            db.get(`SELECT sender_email FROM emails WHERE id = ?`, [emailId], (err, email) => {
+                if (email) {
+                    // Add to flags table
+                    db.run(`INSERT INTO flags (sender_email, flagger_email, reason, severity) VALUES (?, ?, ?, ?)`,
+                          [email.sender_email, authenticatedUser.email, reason, severity]);
+
+                    // Update sender reputation
+                    const scoreChange = severity === 'high' ? -15 : severity === 'medium' ? -10 : -5;
+                    updateSenderReputation(email.sender_email, authenticatedUser.email, 'flagged', scoreChange);
+                    
+                    logSecurityEvent('email_flagged', 'info', authenticatedUser.email, {
+                        emailId,
+                        sender: email.sender_email,
+                        reason,
+                        severity
+                    });
+                }
+            });
+
+            resolve({ success: true });
+        });
+    });
+});
+
+// Subscription management
+ipcMain.handle('get-subscriptions', (event) => {
+    if (!authenticatedUser) return { success: false, error: "Unauthorized" };
+
+    return new Promise((resolve) => {
+        db.all(`SELECT * FROM subscriptions WHERE user_email = ? AND is_active = 1 ORDER BY created_at DESC`,
+                [authenticatedUser.email], (err, rows) => {
+            if (err) {
+                resolve({ success: false, error: err.message });
+            } else {
+                resolve({ success: true, subscriptions: rows });
+            }
+        });
+    });
+});
+
+ipcMain.handle('unsubscribe', (event, unsubscribeToken) => {
+    if (!authenticatedUser) return { success: false, error: "Unauthorized" };
+
+    return new Promise((resolve) => {
+        db.run(`UPDATE subscriptions SET is_active = 0, unsubscribed_at = datetime('now') 
+                WHERE user_email = ? AND unsubscribe_token = ?`,
+                [authenticatedUser.email, unsubscribeToken], function(err) {
+            if (err) {
+                resolve({ success: false, error: err.message });
+            } else if (this.changes === 0) {
+                resolve({ success: false, error: "Subscription not found or already unsubscribed" });
+            } else {
+                logSecurityEvent('unsubscribed', 'info', authenticatedUser.email, { token: unsubscribeToken });
+                resolve({ success: true });
+            }
+        });
+    });
+});

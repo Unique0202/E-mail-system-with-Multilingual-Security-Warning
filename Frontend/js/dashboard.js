@@ -25,8 +25,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-flag-sender').addEventListener('click', flagCurrentSender);
     document.getElementById('btn-mark-safe').addEventListener('click', markCurrentSenderSafe);
 
+    document.getElementById('nav-spam').addEventListener('click', loadSpam);
+    document.getElementById('nav-trash').addEventListener('click', loadTrash);
+    document.getElementById('nav-subscriptions').addEventListener('click', loadSubscriptions);
+
     // 3. Initial Load
     loadInbox();
+    // Setup email actions
+    setupEmailActions();
+    
+    // Load stats
+    loadEmailStats();
+    
+    // Refresh stats periodically
+    setInterval(loadEmailStats, 30000); // Every 30 seconds
 });
 
 function switchView(viewName) {
@@ -226,4 +238,152 @@ async function showSecurityReport() {
 
 function backToList() {
     switchView('view-list');
+}
+
+// Load email statistics
+async function loadEmailStats() {
+    const stats = await window.api.getEmailStats();
+    if (stats.success) {
+        document.getElementById('stat-inbox').textContent = stats.stats.inbox || 0;
+        document.getElementById('stat-unread').textContent = (stats.stats.inbox - stats.stats.read) || 0;
+        document.getElementById('stat-flagged').textContent = stats.stats.flagged || 0;
+    }
+}
+
+// Spam management
+async function loadSpam() {
+    switchView('view-list');
+    document.getElementById('folder-title').innerText = "Spam";
+    const emails = await window.api.getSpam();
+    currentEmails = emails;
+    renderList(emails, true);
+    
+    // Update active nav
+    setActiveNav('nav-spam');
+}
+// Trash management
+async function loadTrash() {
+    switchView('view-list');
+    document.getElementById('folder-title').innerText = "Trash";
+    // You'll need to implement getTrash method
+    const emails = await window.api.getTrash();
+    currentEmails = emails;
+    renderList(emails, true);
+    
+    setActiveNav('nav-trash');
+}
+
+// Subscription management
+async function loadSubscriptions() {
+    switchView('view-subscriptions');
+    const result = await window.api.getSubscriptions();
+    
+    if (result.success) {
+        const container = document.getElementById('subscriptions-list');
+        container.innerHTML = '';
+        
+        if (result.subscriptions.length === 0) {
+            container.innerHTML = '<p>No active subscriptions found.</p>';
+            return;
+        }
+        
+        result.subscriptions.forEach(sub => {
+            const div = document.createElement('div');
+            div.className = 'subscription-item';
+            div.innerHTML = `
+                <div class="subscription-info">
+                    <strong>${sub.sender_email}</strong>
+                    ${sub.subscription_name ? `<br><small>${sub.subscription_name}</small>` : ''}
+                    <br><small>Subscribed: ${new Date(sub.created_at).toLocaleDateString()}</small>
+                </div>
+                <div class="subscription-actions">
+                    <button class="unsubscribe-btn" data-token="${sub.unsubscribe_token}">
+                        Unsubscribe
+                    </button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+        
+        // Add unsubscribe event listeners
+        document.querySelectorAll('.unsubscribe-btn').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const token = e.target.getAttribute('data-token');
+                const result = await window.api.unsubscribe(token);
+                if (result.success) {
+                    alert('Successfully unsubscribed!');
+                    loadSubscriptions();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            });
+        });
+    }
+    
+    setActiveNav('nav-subscriptions');
+}
+// Enhanced email actions
+function setupEmailActions() {
+    document.getElementById('btn-mark-spam').addEventListener('click', markCurrentAsSpam);
+    document.getElementById('btn-delete-email').addEventListener('click', deleteCurrentEmail);
+    document.getElementById('btn-flag-email').addEventListener('click', flagCurrentEmail);
+}
+async function markCurrentAsSpam() {
+    if (!currentDetailEmail) return;
+    
+    const reason = prompt("Why are you marking this as spam?");
+    if (reason) {
+        const result = await window.api.markAsSpam(currentDetailEmail.id, reason);
+        if (result.success) {
+            alert('Email marked as spam!');
+            backToList();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    }
+}
+
+async function deleteCurrentEmail() {
+    if (!currentDetailEmail) return;
+    
+    if (confirm('Are you sure you want to delete this email?')) {
+        const result = await window.api.deleteEmail(currentDetailEmail.id);
+        if (result.success) {
+            alert('Email moved to trash!');
+            backToList();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    }
+}
+
+async function flagCurrentEmail() {
+    if (!currentDetailEmail) return;
+    
+    const reason = prompt("Why are you flagging this email? (phishing, suspicious, inappropriate, etc.)");
+    if (reason) {
+        const severity = prompt("Severity (low, medium, high):", "medium");
+        const result = await window.api.flagEmail(currentDetailEmail.id, reason, severity);
+        if (result.success) {
+            alert('Email flagged successfully!');
+            // Refresh the email detail to show updated status
+            openEmailDetail(currentDetailIndex);
+        } else {
+            alert('Error: ' + result.error);
+        }
+    }
+}
+
+// Update navigation
+function setActiveNav(navId) {
+    // Remove active class from all nav buttons
+    document.querySelectorAll('.sidebar button').forEach(btn => {
+        btn.classList.remove('active', 'folder-active');
+    });
+    
+    // Add active class to current nav
+    const activeBtn = document.getElementById(navId);
+    if (activeBtn) {
+        activeBtn.classList.add('active', 'folder-active');
+    }
 }

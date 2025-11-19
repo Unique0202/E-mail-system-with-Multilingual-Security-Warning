@@ -199,3 +199,95 @@ input:focus, textarea:focus {
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
+/* Stats Display */
+.email-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    padding: 15px;
+    background: var(--bg-element);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Email Actions */
+.email-actions {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    flex-wrap: wrap;
+}
+
+.email-actions button {
+    padding: 8px 12px;
+    background: var(--bg-element);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: var(--transition);
+    flex: 1;
+    min-width: 120px;
+}
+
+.email-actions button:hover {
+    background: var(--bg-hover);
+    transform: translateY(-1px);
+}
+
+/* Subscription List */
+.subscription-item {
+    background: var(--bg-sidebar);
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.subscription-info {
+    flex: 1;
+}
+
+.subscription-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.unsubscribe-btn {
+    background: var(--status-red);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.unsubscribe-btn:hover {
+    background: #dc2626;
+}
+
+/* Folder Navigation */
+.folder-active {
+    background: rgba(59, 130, 246, 0.15) !important;
+    color: var(--primary) !important;
+}

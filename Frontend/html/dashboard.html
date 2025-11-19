@@ -4,20 +4,345 @@
     <meta charset="UTF-8">
     <title>Dashboard - Secure Email</title>
     <link rel="stylesheet" href="../css/dashboard.css">
+    <style>
+        /* Enhanced CSS for new features */
+        .email-stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            padding: 15px;
+            background: var(--bg-element);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .stat-item {
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .email-actions {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .email-actions button {
+            padding: 10px 15px;
+            background: var(--bg-element);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: var(--transition);
+            flex: 1;
+            min-width: 140px;
+            font-size: 0.9rem;
+        }
+
+        .email-actions button:hover {
+            background: var(--bg-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .subscription-item {
+            background: var(--bg-sidebar);
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .subscription-item:hover {
+            background: var(--bg-element);
+            transform: translateY(-2px);
+        }
+
+        .subscription-info {
+            flex: 1;
+        }
+
+        .subscription-info strong {
+            color: var(--text-main);
+            font-size: 1rem;
+        }
+
+        .subscription-info small {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .subscription-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .unsubscribe-btn {
+            background: var(--status-red);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.85rem;
+        }
+
+        .unsubscribe-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .folder-active {
+            background: rgba(59, 130, 246, 0.15) !important;
+            color: var(--primary) !important;
+            border-left: 3px solid var(--primary);
+        }
+
+        .security-info {
+            margin-top: 8px;
+            font-size: 0.8rem;
+        }
+
+        .security-score {
+            color: var(--text-muted);
+            margin-right: 10px;
+        }
+
+        .security-warning {
+            color: var(--status-red);
+            font-weight: 500;
+        }
+
+        .badge {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px 0;
+            display: inline-block;
+        }
+
+        .badge-green {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--status-green);
+            border: 1px solid var(--status-green);
+        }
+
+        .badge-yellow {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--status-yellow);
+            border: 1px solid var(--status-yellow);
+        }
+
+        .badge-red {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--status-red);
+            border: 1px solid var(--status-red);
+        }
+
+        .warnings-box {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--status-red);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: var(--radius);
+        }
+
+        .warning-high {
+            color: var(--status-red);
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 4px;
+        }
+
+        .warning-medium {
+            color: var(--status-yellow);
+            margin-bottom: 10px;
+            padding: 8px;
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: 4px;
+        }
+
+        .link-warning {
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+
+        .link-warning.high {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: var(--status-red);
+        }
+
+        .link-warning.medium {
+            background: rgba(245, 158, 11, 0.1);
+            border-left-color: var(--status-yellow);
+        }
+
+        .link-warning.low {
+            background: rgba(16, 185, 129, 0.1);
+            border-left-color: var(--status-green);
+        }
+
+        .security-log {
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+
+        .security-log.info {
+            background: rgba(59, 130, 246, 0.1);
+            border-left-color: var(--primary);
+        }
+
+        .security-log.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-left-color: var(--status-yellow);
+        }
+
+        .security-log.error {
+            background: rgba(239, 68, 68, 0.1);
+            border-left-color: var(--status-red);
+        }
+
+        .email-header {
+            background: var(--bg-element);
+            padding: 20px;
+            border-radius: var(--radius);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .email-header h2 {
+            margin: 0 0 15px 0;
+            color: var(--text-main);
+        }
+
+        .email-header p {
+            margin: 5px 0;
+            color: var(--text-muted);
+        }
+
+        .email-body {
+            background: var(--bg-element);
+            padding: 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        #btn-back {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        #btn-back:hover {
+            background: var(--bg-hover);
+        }
+
+        #btn-send, #btn-scan-links {
+            padding: 12px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            margin-top: 10px;
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        #btn-send:hover, #btn-scan-links:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        #btn-scan-links {
+            background: var(--status-yellow);
+            margin-left: 10px;
+        }
+
+        #btn-scan-links:hover {
+            background: #e58e0b;
+        }
+
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
+        <!-- Sidebar Navigation -->
         <div class="sidebar">
             <div id="user-display" class="user-profile">Loading...</div>
+            
+            <!-- Email Stats -->
+            <div class="email-stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="stat-inbox">0</span>
+                    <span class="stat-label">Inbox</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="stat-unread">0</span>
+                    <span class="stat-label">Unread</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="stat-flagged">0</span>
+                    <span class="stat-label">Flagged</span>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
             <button id="nav-compose">✉ Compose</button>
             <button id="nav-inbox">📥 Inbox</button>
             <button id="nav-sent">📤 Sent</button>
+            <button id="nav-spam">🚫 Spam</button>
+            <button id="nav-trash">🗑️ Trash</button>
+            <button id="nav-subscriptions">📬 Subscriptions</button>
             <button id="nav-security">🛡️ Security Report</button>
             <button id="nav-logout" class="logout-btn">🚪 Logout</button>
         </div>
 
+        <!-- Main Content Area -->
         <div class="main-content">
-            <!-- Inbox/Sent View -->
+            <!-- Inbox/Sent/Spam/Trash View -->
             <div id="view-list">
                 <h2 id="folder-title">Inbox</h2>
                 <div id="email-list"></div>
@@ -28,10 +353,14 @@
                 <h2>Compose Secure Email</h2>
                 <input type="email" id="comp-to" placeholder="Recipient Email">
                 <input type="text" id="comp-subject" placeholder="Subject">
-                <textarea id="comp-body" rows="15" placeholder="Message..."></textarea>
+                <textarea id="comp-body" rows="15" placeholder="Type your message here..."></textarea>
+                
                 <div id="link-warnings" class="warnings-box hidden"></div>
-                <button id="btn-send">Send Securely</button>
-                <button id="btn-scan-links">🔍 Scan Links</button>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-send">Send Securely</button>
+                    <button id="btn-scan-links">🔍 Scan Links</button>
+                </div>
             </div>
 
             <!-- Security Report View -->
@@ -40,25 +369,42 @@
                 <div id="security-report"></div>
             </div>
 
+            <!-- Subscriptions View -->
+            <div id="view-subscriptions" class="hidden">
+                <h2>Email Subscriptions</h2>
+                <p style="color: var(--text-muted); margin-bottom: 20px;">
+                    Manage your email subscriptions and unsubscribe from unwanted emails.
+                </p>
+                <div id="subscriptions-list"></div>
+            </div>
+
             <!-- Email Detail View -->
             <div id="view-email-detail" class="hidden">
-                <button id="btn-back">← Back</button>
+                <button id="btn-back">← Back to List</button>
+                
                 <div class="email-header">
                     <h2 id="detail-subject">Subject</h2>
-                    <div id="security-badge" class="badge">Checking Security...</div>
-                    <p>From: <span id="detail-from"></span></p>
-                    <p>To: <span id="detail-to"></span></p>
-                    <p>Date: <span id="detail-date"></span></p>
+                    <div id="security-badge" class="badge badge-green">Checking Security...</div>
+                    <p><strong>From:</strong> <span id="detail-from"></span></p>
+                    <p><strong>To:</strong> <span id="detail-to"></span></p>
+                    <p><strong>Date:</strong> <span id="detail-date"></span></p>
                 </div>
+
                 <div id="security-warnings" class="warnings-box hidden"></div>
+
                 <div class="email-actions">
-                    <button id="btn-flag-sender">🚩 Flag Sender</button>
+                    <button id="btn-mark-spam">🚫 Mark as Spam</button>
+                    <button id="btn-flag-email">🚩 Flag Email</button>
+                    <button id="btn-delete-email">🗑️ Delete</button>
+                    <button id="btn-flag-sender">⚠️ Flag Sender</button>
                     <button id="btn-mark-safe">✅ Mark Safe</button>
                 </div>
+
                 <div id="detail-body" class="email-body"></div>
             </div>
         </div>
     </div>
+
     <script src="../js/dashboard.js"></script>
 </body>
 </html>
