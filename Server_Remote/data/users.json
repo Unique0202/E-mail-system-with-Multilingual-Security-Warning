@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1763579906776,
+    "email": "yash_test@gmail.com",
+    "password": "e3f6df4051d41f1ef19344979a386601f6c04fd9015843d00e8938b57281da2f",
+    "languages": [
+      "en",
+      "hi"
+    ],
+    "totp_secret": "MOCK_SECRET"
+  },
+  {
+    "id": 1763579976106,
+    "email": "yash_tst@gmail.com",
+    "password": "e3f6df4051d41f1ef19344979a386601f6c04fd9015843d00e8938b57281da2f",
+    "languages": [
+      "en",
+      "hi"
+    ],
+    "totp_secret": "MOCK_SECRET"
+  },
+  {
+    "id": 1763580303765,
+    "email": "beta@gmail.com",
+    "password": "e3f6df4051d41f1ef19344979a386601f6c04fd9015843d00e8938b57281da2f",
+    "languages": [
+      "hi",
+      "en"
+    ],
+    "totp_secret": "MOCK_SECRET"
+  }
+]
