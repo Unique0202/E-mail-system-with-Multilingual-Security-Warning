@@ -30,40 +30,53 @@ ipcMain.handle('api-request', async (event, { endpoint, method, body }) => {
             args.push(JSON.stringify(body));
         }
 
-        const python = spawn('python', args);
+        // Spawn python
+        const python = spawn('python', args); 
 
         let resultData = '';
+        let errorData = '';
         
         python.stdout.on('data', (data) => {
             resultData += data.toString();
         });
 
         python.stderr.on('data', (data) => {
-            console.error(`Python Error: ${data}`);
+            errorData += data.toString();
         });
 
         python.on('close', async (code) => {
-            try {
-                // 2. Parse the JSON from Python
-                const result = JSON.parse(resultData);
+            // --- DEBUG LOGGING ---
+            console.log(`[API] ${method} ${endpoint}`);
+            console.log(`[RAW RESPONSE]:`, resultData); 
+            if (errorData) console.error(`[PYTHON ERROR]:`, errorData);
+            // ---------------------
 
-                // 3. INTERCEPT REGISTRATION: Generate QR Code here
+            try {
+                // Clean the output: remove any extra whitespace or newlines
+                const cleanJson = resultData.trim();
+                const result = JSON.parse(cleanJson);
+
+                // QR Code Interception (Keep your existing logic here)
                 if (endpoint === '/api/auth/register' && result.success && result.otpauth_url) {
+                    const QRCode = require('qrcode');
                     try {
-                        // Convert text URL to Image Data URI
                         result.qrCode = await QRCode.toDataURL(result.otpauth_url);
-                    } catch (qrErr) {
-                        console.error("QR Generation failed:", qrErr);
-                    }
+                    } catch (err) { console.error("QR Error", err); }
                 }
 
                 resolve(result);
             } catch (e) {
-                resolve({ success: false, error: "Failed to parse Python response: " + resultData });
+                console.error("JSON Parse Error:", e);
+                // Return a clear error so the UI knows what happened
+                resolve({ 
+                    success: false, 
+                    error: "Client Parse Error. Check Terminal for details." 
+                });
             }
         });
     });
 });
+
 
 app.whenReady().then(createWindow);
 
