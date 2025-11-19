@@ -1,7 +1,6 @@
 .gitignore
 
 Client_Electron/node_modules/*
-Client_Electron/package.json
 Client_Electron/database_schema.sql
 Client_Electron/databaseManager.js
 Client_Electron/security/linkVerifier.js
