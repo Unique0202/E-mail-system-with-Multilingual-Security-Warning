@@ -63,6 +63,14 @@ contextBridge.exposeInMainWorld('api', {
         const user = JSON.parse(window.localStorage.getItem('currentUser'));
         return pythonCall('/api/sender/block', 'POST', { sender_email: senderEmail, user_email: user.email });
     },
+    unblockSender: (senderEmail) => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall('/api/sender/unblock', 'POST', { sender_email: senderEmail, user_email: user.email });
+    },
+    isBlocked: (senderEmail) => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall(`/api/sender/is_blocked?sender_email=${senderEmail}&user_email=${user.email}`, 'GET');
+    },
     markAsRead: (emailId) => {
         return pythonCall('/api/email/mark_read', 'POST', { email_id: emailId });
     },

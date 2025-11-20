@@ -213,6 +213,10 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             self.handle_delete_permanent(data)
         elif self.path == '/api/sender/block':
             self.handle_block_sender(data)
+        elif self.path == '/api/sender/unblock':
+            self.handle_unblock_sender(data)
+        elif self.path == '/api/sender/is_blocked':
+            self.handle_is_blocked(data)
         elif self.path == '/api/email/mark_read':
             self.handle_mark_read(data)
         else:
@@ -657,14 +661,35 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                 break
 
         db_write('users', users)
-
-        # Delete all emails from this sender
-        emails = db_read('emails')
-        emails = [e for e in emails if not (e.get('sender_email') == sender_email and e.get('recipient_email') == user_email)]
-        db_write('emails', emails)
-
         self._set_headers(200)
         self.wfile.write(json.dumps({"success": True}).encode())
+
+    def handle_unblock_sender(self, data):
+        sender_email = data.get('sender_email')
+        user_email = data.get('user_email')
+
+        # Remove from blocked senders list
+        users = db_read('users')
+        for user in users:
+            if user.get('email') == user_email:
+                if 'blocked_senders' in user and sender_email in user['blocked_senders']:
+                    user['blocked_senders'].remove(sender_email)
+                break
+
+        db_write('users', users)
+        self._set_headers(200)
+        self.wfile.write(json.dumps({"success": True}).encode())
+
+    def handle_is_blocked(self, data):
+        sender_email = data.get('sender_email')
+        user_email = data.get('user_email')
+
+        users = db_read('users')
+        user = next((u for u in users if u.get('email') == user_email), None)
+        is_blocked = sender_email in user.get('blocked_senders', []) if user else False
+
+        self._set_headers(200)
+        self.wfile.write(json.dumps({"success": True, "is_blocked": is_blocked}).encode())
 
     def handle_mark_read(self, data):
         email_id = data.get('email_id')

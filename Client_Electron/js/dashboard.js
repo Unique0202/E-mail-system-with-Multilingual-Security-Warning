@@ -189,6 +189,8 @@ function displayEmailDetail(index) {
 
     if (currentFolder === 'spam') {
         document.getElementById('spam-actions').classList.remove('hidden');
+        // Check if sender is blocked and update button text
+        updateBlockButton(email.sender_email);
     } else if (currentFolder === 'trash') {
         document.getElementById('trash-actions').classList.remove('hidden');
     } else {
@@ -317,7 +319,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById('nav-spam').addEventListener('click', loadSpam);
     document.getElementById('nav-trash').addEventListener('click', loadTrash);
-    document.getElementById('nav-subscriptions').addEventListener('click', loadSubscriptions);
 
     // Add unread listener if element exists
     const navUnread = document.getElementById('nav-unread');
@@ -670,15 +671,39 @@ async function blockSender() {
     if (!currentDetailEmail) return;
 
     const senderEmail = currentDetailEmail.sender_email;
-    if (confirm(`Are you sure you want to block ${senderEmail}? You will no longer receive emails from this sender.`)) {
-        const result = await window.api.blockSender(senderEmail);
+    const blockBtn = document.getElementById('btn-block-sender');
+    const isCurrentlyBlocked = blockBtn.textContent.includes('Unblock');
+
+    if (isCurrentlyBlocked) {
+        // Unblock the sender
+        const result = await window.api.unblockSender(senderEmail);
         if (result.success) {
-            alert('Sender blocked successfully!');
-            backToList();
-            loadSpam();
+            alert('Sender unblocked successfully!');
+            blockBtn.textContent = '🚫 Block Sender';
         } else {
             alert('Error: ' + result.error);
         }
+    } else {
+        // Block the sender
+        if (confirm(`Are you sure you want to block ${senderEmail}? You will no longer receive emails from this sender.`)) {
+            const result = await window.api.blockSender(senderEmail);
+            if (result.success) {
+                alert('Sender blocked successfully!');
+                blockBtn.textContent = '🔓 Unblock Sender';
+            } else {
+                alert('Error: ' + result.error);
+            }
+        }
+    }
+}
+
+async function updateBlockButton(senderEmail) {
+    const result = await window.api.isBlocked(senderEmail);
+    const blockBtn = document.getElementById('btn-block-sender');
+    if (result.success && result.is_blocked) {
+        blockBtn.textContent = '🔓 Unblock Sender';
+    } else {
+        blockBtn.textContent = '🚫 Block Sender';
     }
 }
 
