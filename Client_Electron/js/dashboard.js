@@ -196,7 +196,8 @@ function openEmailDetail(index) {
 
 async function flagCurrentSender() {
     const email = document.getElementById('detail-from').innerText;
-    const reason = prompt("Why are you flagging this sender? (phishing, spam, malware, etc.)");
+    // const reason = prompt("Why are you flagging this sender? (phishing, spam, malware, etc.)");
+    const reason = "Manual Flag";
     
     if (reason) {
         const result = await window.api.flagSender(email, reason);
@@ -336,7 +337,8 @@ function setupEmailActions() {
 async function markCurrentAsSpam() {
     if (!currentDetailEmail) return;
     
-    const reason = prompt("Why are you marking this as spam?");
+    // const reason = prompt("Why are you marking this as spam?");
+    const reason = "User Marked Spam";
     if (reason) {
         const result = await window.api.markAsSpam(currentDetailEmail.id, reason);
         if (result.success) {
@@ -365,17 +367,35 @@ async function deleteCurrentEmail() {
 async function flagCurrentEmail() {
     if (!currentDetailEmail) return;
     
-    const reason = prompt("Why are you flagging this email? (phishing, suspicious, inappropriate, etc.)");
-    if (reason) {
-        const severity = prompt("Severity (low, medium, high):", "medium");
-        const result = await window.api.flagEmail(currentDetailEmail.id, reason, severity);
-        if (result.success) {
-            alert('Email flagged successfully!');
-            // Refresh the email detail to show updated status
-            openEmailDetail(currentDetailIndex);
-        } else {
-            alert('Error: ' + result.error);
-        }
+    // const reason = prompt("Why are you flagging this email? (phishing, suspicious, inappropriate, etc.)");
+    // if (reason) {
+    //     const severity = prompt("Severity (low, medium, high):", "medium");
+    //     const result = await window.api.flagEmail(currentDetailEmail.id, reason, severity);
+    //     if (result.success) {
+    //         alert('Email flagged successfully!');
+    //         // Refresh the email detail to show updated status
+    //         openEmailDetail(currentDetailIndex);
+    //     } else {
+    //         alert('Error: ' + result.error);
+    //     }
+    // }
+    const defaultReason = "Manual Flag"; 
+    const defaultSeverity = "medium"; 
+
+    // 2. Call the API directly without asking the user
+    const result = await window.api.flagEmail(
+        currentDetailEmail.id, 
+        defaultReason, 
+        defaultSeverity
+    );
+
+    // 3. Handle the result
+    if (result.success) {
+        alert('Email flagged successfully!');
+        // Refresh the email detail to show updated status
+        openEmailDetail(currentDetailIndex);
+    } else {
+        alert('Error: ' + result.error);
     }
 }
 
