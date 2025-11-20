@@ -21,10 +21,21 @@ function isPhishingLink(url) {
     return PHISHING_LINKS.some(phish => urlLower.includes(phish));
 }
 
-// Find all URLs in text
+// Find all URLs in text (with or without protocol)
 function findUrls(text) {
+    // Match URLs with protocol
     const urlRegex = /https?:\/\/[^\s]+/g;
-    return text.match(urlRegex) || [];
+    const urlsWithProtocol = text.match(urlRegex) || [];
+
+    // Also check for phishing domains without protocol
+    const foundPhishingLinks = [];
+    PHISHING_LINKS.forEach(phish => {
+        if (text.toLowerCase().includes(phish)) {
+            foundPhishingLinks.push(phish);
+        }
+    });
+
+    return [...urlsWithProtocol, ...foundPhishingLinks];
 }
 
 // Multilingual Warning Translations
@@ -177,12 +188,27 @@ function displayEmailDetail(index) {
     const body = email.body || '';
     const bodyContainer = document.getElementById('detail-body');
 
-    // Replace URLs with links that have tooltips
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const htmlBody = body.replace(urlRegex, (url) => {
+    let htmlBody = body;
+
+    // First, replace phishing domains (without protocol) with warnings
+    PHISHING_LINKS.forEach(phish => {
+        const regex = new RegExp(`(${phish.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        htmlBody = htmlBody.replace(regex, (match) => {
+            return `<span class="unsafe-link-wrapper">
+                <a href="#" class="unsafe-link" onclick="event.preventDefault(); alert('${getTranslation('unsafe_link_details', lang1)}')">${match}</a>
+                <span class="link-tooltip">${getTranslation('unsafe_link_warning', lang1)}<br><small>${getTranslation('unsafe_link_details', lang1)}</small></span>
+            </span>`;
+        });
+    });
+
+    // Then replace URLs with protocol
+    const urlRegex = /(https?:\/\/[^\s<]+)/g;
+    htmlBody = htmlBody.replace(urlRegex, (url) => {
+        // Skip if already wrapped (contains class)
+        if (url.includes('class=')) return url;
+
         const isUnsafe = isPhishingLink(url);
         if (isUnsafe) {
-            const tooltip = `${getTranslation('unsafe_link_warning', lang1)}\n${getTranslation('unsafe_link_warning', lang2)}\n\n${getTranslation('unsafe_link_details', lang1)}`;
             return `<span class="unsafe-link-wrapper">
                 <a href="#" class="unsafe-link" onclick="event.preventDefault(); alert('${getTranslation('unsafe_link_details', lang1)}')">${url}</a>
                 <span class="link-tooltip">${getTranslation('unsafe_link_warning', lang1)}<br><small>${getTranslation('unsafe_link_details', lang1)}</small></span>

@@ -79,20 +79,19 @@ def analyze_email(subject, body, sender_email=None):
                 "details": {"primary": f"Suspicious keyword detected: '{word}'", "secondary": ""}
             })
 
-    # 2. Link Analysis (Regex)
+    # 2. Check for phishing links (with or without protocol)
+    for phish_link in PHISHING_LINKS:
+        if phish_link in body_lower:
+            score += 40
+            warnings.append({
+                "severity": "high",
+                "title": {"primary": "Phishing Link Detected", "secondary": ""},
+                "details": {"primary": f"Known phishing link: {phish_link}", "secondary": ""}
+            })
+
+    # 3. Link Analysis (Regex) for URLs with protocol
     urls = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', body)
     for url in urls:
-        # Check for predefined phishing links
-        for phish_link in PHISHING_LINKS:
-            if phish_link in url.lower():
-                score += 40
-                warnings.append({
-                    "severity": "high",
-                    "title": {"primary": "Phishing Link Detected", "secondary": ""},
-                    "details": {"primary": f"Known phishing link: {url}", "secondary": ""}
-                })
-                break
-
         if '@' in url:
             score += 30
             warnings.append({
