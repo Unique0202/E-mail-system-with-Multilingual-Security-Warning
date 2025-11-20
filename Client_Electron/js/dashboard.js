@@ -193,9 +193,10 @@ function displayEmailDetail(index) {
         updateBlockButton(email.sender_email);
     } else if (currentFolder === 'trash') {
         document.getElementById('trash-actions').classList.remove('hidden');
-    } else {
+    } else if (currentFolder === 'inbox') {
         document.getElementById('inbox-actions').classList.remove('hidden');
     }
+    // No buttons shown for 'sent' folder
 
     // Get user languages for tooltips
     const languages = currentUser.languages || ['en', 'en'];
@@ -371,6 +372,7 @@ async function loadInbox() {
 async function loadSent() {
     switchView('view-list');
     document.getElementById('folder-title').innerText = "Sent";
+    currentFolder = 'sent';
     const emails = await window.api.getSent();
     currentEmails = emails;
     renderList(emails, false);
@@ -680,6 +682,7 @@ async function blockSender() {
         if (result.success) {
             alert('Sender unblocked successfully!');
             blockBtn.textContent = '🚫 Block Sender';
+            loadEmailStats(); // Refresh stats
         } else {
             alert('Error: ' + result.error);
         }
@@ -690,6 +693,7 @@ async function blockSender() {
             if (result.success) {
                 alert('Sender blocked successfully!');
                 blockBtn.textContent = '🔓 Unblock Sender';
+                loadEmailStats(); // Refresh stats
             } else {
                 alert('Error: ' + result.error);
             }

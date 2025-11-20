@@ -240,6 +240,8 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             self.handle_get_security_report(params)
         elif parsed_path.path == '/api/subscriptions':
             self.handle_get_subscriptions(params)
+        elif parsed_path.path == '/api/sender/is_blocked':
+            self.handle_is_blocked_get(params)
         else:
             self._set_headers(404)
 
@@ -683,6 +685,17 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
     def handle_is_blocked(self, data):
         sender_email = data.get('sender_email')
         user_email = data.get('user_email')
+
+        users = db_read('users')
+        user = next((u for u in users if u.get('email') == user_email), None)
+        is_blocked = sender_email in user.get('blocked_senders', []) if user else False
+
+        self._set_headers(200)
+        self.wfile.write(json.dumps({"success": True, "is_blocked": is_blocked}).encode())
+
+    def handle_is_blocked_get(self, params):
+        sender_email = params.get('sender_email', [None])[0]
+        user_email = params.get('user_email', [None])[0]
 
         users = db_read('users')
         user = next((u for u in users if u.get('email') == user_email), None)
