@@ -404,6 +404,60 @@
         .btn-proceed:hover {
             background: #dc2626;
         }
+
+        /* Link styles in email body */
+        .safe-link {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .unsafe-link-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .unsafe-link {
+            color: var(--status-red);
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .link-tooltip {
+            visibility: hidden;
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            width: 250px;
+            text-align: center;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--status-red);
+        }
+
+        .link-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -8px;
+            border-width: 8px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+        }
+
+        .unsafe-link-wrapper:hover .link-tooltip {
+            visibility: visible;
+        }
+
+        .unsafe-link:hover {
+            color: #dc2626;
+        }
     </style>
 </head>
 <body>

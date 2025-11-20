@@ -4,6 +4,29 @@ let currentDetailEmail = null;
 let currentDetailIndex = null;
 let pendingEmailIndex = null;
 
+// Predefined phishing links (must match server)
+const PHISHING_LINKS = [
+    'bit.ly/free-money',
+    'tinyurl.com/verify-account',
+    'suspicious-bank.com',
+    'login-secure-verify.com',
+    'account-update-now.com',
+    'free-gift-card.com',
+    'urgent-action-required.net'
+];
+
+// Check if a URL contains a phishing link
+function isPhishingLink(url) {
+    const urlLower = url.toLowerCase();
+    return PHISHING_LINKS.some(phish => urlLower.includes(phish));
+}
+
+// Find all URLs in text
+function findUrls(text) {
+    const urlRegex = /https?:\/\/[^\s]+/g;
+    return text.match(urlRegex) || [];
+}
+
 // Multilingual Warning Translations
 const WARNING_TRANSLATIONS = {
     'phishing_warning': {
@@ -75,8 +98,8 @@ function getTranslation(key, language) {
 
 function showSecurityWarningModal(email, index) {
     const security = email.security_analysis || {};
-    const warnings = security.warnings || [];
     const safeScore = security.safe_score || 50;
+    const body = email.body || '';
 
     // Get user languages
     const languages = currentUser.languages || ['en', 'en'];
@@ -89,7 +112,7 @@ function showSecurityWarningModal(email, index) {
 
     let hasWarnings = false;
 
-    // Check for low safe score warning
+    // Layer 1: Check for low safe score warning (sender reputation)
     if (safeScore < 40) {
         hasWarnings = true;
         const warningDiv = document.createElement('div');
@@ -103,36 +126,25 @@ function showSecurityWarningModal(email, index) {
         modalWarnings.appendChild(warningDiv);
     }
 
-    // Check for phishing links in warnings
-    warnings.forEach(warning => {
-        if (warning.severity === 'high') {
-            hasWarnings = true;
-            const title = warning.title?.primary || '';
+    // Layer 2: Check for phishing links in email body
+    const urls = findUrls(body);
+    const phishingUrls = urls.filter(url => isPhishingLink(url));
 
-            // Check if it's a phishing link warning
-            if (title.toLowerCase().includes('phishing') || title.toLowerCase().includes('link')) {
-                const warningDiv = document.createElement('div');
-                warningDiv.className = 'warning-item';
-                warningDiv.innerHTML = `
-                    <div class="warning-item-title">${getTranslation('unsafe_link_warning', lang1)}</div>
-                    <div class="warning-item-secondary">${getTranslation('unsafe_link_warning', lang2)}</div>
-                    <div style="margin-top: 10px; font-size: 0.9rem;">${getTranslation('unsafe_link_details', lang1)}</div>
-                    <div class="warning-item-secondary">${getTranslation('unsafe_link_details', lang2)}</div>
-                `;
-                modalWarnings.appendChild(warningDiv);
-            } else {
-                // Generic high severity warning
-                const warningDiv = document.createElement('div');
-                warningDiv.className = 'warning-item';
-                warningDiv.innerHTML = `
-                    <div class="warning-item-title">${getTranslation('phishing_warning', lang1)}</div>
-                    <div class="warning-item-secondary">${getTranslation('phishing_warning', lang2)}</div>
-                    <div style="margin-top: 10px; font-size: 0.9rem;">${warning.details?.primary || ''}</div>
-                `;
-                modalWarnings.appendChild(warningDiv);
-            }
-        }
-    });
+    if (phishingUrls.length > 0) {
+        hasWarnings = true;
+        const warningDiv = document.createElement('div');
+        warningDiv.className = 'warning-item';
+        warningDiv.innerHTML = `
+            <div class="warning-item-title">${getTranslation('unsafe_link_warning', lang1)}</div>
+            <div class="warning-item-secondary">${getTranslation('unsafe_link_warning', lang2)}</div>
+            <div style="margin-top: 10px; font-size: 0.9rem;">${getTranslation('unsafe_link_details', lang1)}</div>
+            <div class="warning-item-secondary">${getTranslation('unsafe_link_details', lang2)}</div>
+            <div style="margin-top: 10px; font-size: 0.8rem; color: #ef4444;">
+                Detected: ${phishingUrls.join(', ')}
+            </div>
+        `;
+        modalWarnings.appendChild(warningDiv);
+    }
 
     if (!hasWarnings) {
         // No warnings, proceed directly
@@ -151,11 +163,36 @@ function displayEmailDetail(index) {
     currentDetailIndex = index;
     switchView('view-email-detail');
 
+    // Get user languages for tooltips
+    const languages = currentUser.languages || ['en', 'en'];
+    const lang1 = languages[0] || 'en';
+    const lang2 = languages[1] || 'en';
+
     document.getElementById('detail-subject').innerText = email.subject || 'No Subject';
     document.getElementById('detail-from').innerText = email.sender_email || 'Unknown';
     document.getElementById('detail-to').innerText = email.recipient_email || 'Unknown';
     document.getElementById('detail-date').innerText = email.sent_at ? new Date(email.sent_at).toLocaleString() : 'Unknown';
-    document.getElementById('detail-body').innerText = email.body || '';
+
+    // Render body with clickable links and tooltips for unsafe ones
+    const body = email.body || '';
+    const bodyContainer = document.getElementById('detail-body');
+
+    // Replace URLs with links that have tooltips
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const htmlBody = body.replace(urlRegex, (url) => {
+        const isUnsafe = isPhishingLink(url);
+        if (isUnsafe) {
+            const tooltip = `${getTranslation('unsafe_link_warning', lang1)}\n${getTranslation('unsafe_link_warning', lang2)}\n\n${getTranslation('unsafe_link_details', lang1)}`;
+            return `<span class="unsafe-link-wrapper">
+                <a href="#" class="unsafe-link" onclick="event.preventDefault(); alert('${getTranslation('unsafe_link_details', lang1)}')">${url}</a>
+                <span class="link-tooltip">${getTranslation('unsafe_link_warning', lang1)}<br><small>${getTranslation('unsafe_link_details', lang1)}</small></span>
+            </span>`;
+        } else {
+            return `<a href="${url}" target="_blank" class="safe-link">${url}</a>`;
+        }
+    });
+
+    bodyContainer.innerHTML = htmlBody.replace(/\n/g, '<br>');
 
     // Display security information
     const security = email.security_analysis || {};
