@@ -273,7 +273,10 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         
         users.append(new_user)
         db_write('users', users)
-        
+
+        # Create demo emails for new user
+        self.create_demo_emails(email)
+
         # 2. Construct the OTP Auth URL manually
         # Format: otpauth://totp/Label:Email?secret=SECRET&issuer=Label
         otpauth_url = f"otpauth://totp/SecureMail:{email}?secret={secret}&issuer=SecureMail"
@@ -281,9 +284,143 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         # 3. Send URL to client (Client will draw the QR code)
         self._set_headers(200)
         self.wfile.write(json.dumps({
-            "success": True, 
-            "otpauth_url": otpauth_url 
+            "success": True,
+            "otpauth_url": otpauth_url
         }).encode())
+
+    def create_demo_emails(self, user_email):
+        """Create 10 demo emails for testing all features"""
+        emails = db_read('emails')
+        reputation = db_read('reputation')
+        base_id = int(time.time() * 1000)
+
+        # Add demo sender reputations
+        demo_reputations = [
+            {"email": "scammer@suspicious-bank.com", "safe_score": 15, "flag_count": 5, "flag_reasons": ["phishing", "scam"], "marked_safe_count": 0, "flagged_by": [], "marked_safe_by": []},
+            {"email": "spammer@free-gift-card.com", "safe_score": 20, "flag_count": 4, "flag_reasons": ["spam"], "marked_safe_count": 0, "flagged_by": [], "marked_safe_by": []},
+            {"email": "urgent@account-update-now.com", "safe_score": 25, "flag_count": 3, "flag_reasons": ["phishing"], "marked_safe_count": 0, "flagged_by": [], "marked_safe_by": []},
+        ]
+
+        for rep in demo_reputations:
+            if not any(r.get('email') == rep['email'] for r in reputation):
+                reputation.append(rep)
+
+        db_write('reputation', reputation)
+
+        demo_emails = [
+            {
+                "id": base_id + 1,
+                "sender_email": "welcome@securemail.com",
+                "recipient_email": user_email,
+                "subject": "Welcome to SecureMail!",
+                "body": "Welcome to SecureMail!\n\nThank you for joining our secure email platform. We're excited to have you!\n\nYour account is now protected with advanced security features including:\n- Phishing link detection\n- Sender reputation scoring\n- Multilingual security warnings\n\nEnjoy your secure email experience!\n\nBest regards,\nThe SecureMail Team",
+                "sent_at": time.strftime('%Y-%m-%dT%H:%M:%S'),
+                "folder": "inbox",
+                "is_read": False
+            },
+            {
+                "id": base_id + 2,
+                "sender_email": "scammer@suspicious-bank.com",
+                "recipient_email": user_email,
+                "subject": "URGENT: Your Account Has Been Compromised!",
+                "body": "Dear Customer,\n\nWe have detected suspicious activity on your account. Your account will be suspended unless you verify your identity immediately.\n\nClick here to verify: https://suspicious-bank.com/verify\n\nYou must act within 24 hours or your account will be permanently closed.\n\nBank Security Team",
+                "sent_at": time.strftime('%Y-%m-%dT%H:%M:%S'),
+                "folder": "inbox",
+                "is_read": False
+            },
+            {
+                "id": base_id + 3,
+                "sender_email": "spammer@free-gift-card.com",
+                "recipient_email": user_email,
+                "subject": "Congratulations! You've Won a $1000 Gift Card!",
+                "body": "CONGRATULATIONS!!!\n\nYou have been selected as our lucky winner!\n\nClaim your FREE $1000 Amazon Gift Card now!\n\nClick here: free-gift-card.com/claim\n\nThis offer expires in 1 hour! Act NOW!\n\nDon't miss this amazing opportunity!",
+                "sent_at": time.strftime('%Y-%m-%dT%H:%M:%S'),
+                "folder": "inbox",
+                "is_read": False
+            },
+            {
+                "id": base_id + 4,
+                "sender_email": "newsletter@techblog.com",
+                "recipient_email": user_email,
+                "subject": "Weekly Tech News Digest",
+                "body": "Hello!\n\nHere's your weekly tech news:\n\n1. New AI breakthroughs in 2024\n2. Cybersecurity best practices\n3. Cloud computing trends\n\nRead more at: https://techblog.com/weekly\n\nStay informed!\nTech Blog Team",
+                "sent_at": time.strftime('%Y-%m-%dT%H:%M:%S'),
+                "folder": "inbox",
+                "is_read": False
+            },
+            {
+                "id": base_id + 5,
+                "sender_email": "urgent@account-update-now.com",
+                "recipient_email": user_email,
+                "subject": "Action Required: Update Your Payment Method",
+                "body": "Important Notice!\n\nYour payment method has expired. Update it immediately to avoid service interruption.\n\nUpdate here: account-update-now.com/payment\n\nIf you don't update within 48 hours, your account will be terminated.\n\nAccount Services",
+                "sent_at": time.strftime('%Y-%m-%dT%H:%M:%S'),
+                "folder": "inbox",
+                "is_read": False
+            },
+            {
+                "id": base_id + 6,
+                "sender_email": "hr@company.com",
+                "recipient_email": user_email,
+                "subject": "Team Meeting Tomorrow at 2 PM",
+                "body": "Hi Team,\n\nJust a reminder that we have our weekly team meeting tomorrow at 2 PM.\n\nAgenda:\n- Project updates\n- Q4 planning\n- Team announcements\n\nPlease come prepared with your status updates.\n\nBest,\nHR Department",
+                "sent_at": time.strftime('%Y-%m-%dT%H:%M:%S'),
+                "folder": "inbox",
+                "is_read": False
+            },
+            {
+                "id": base_id + 7,
+                "sender_email": "phishing@login-secure-verify.com",
+                "recipient_email": user_email,
+                "subject": "Verify Your Login - Security Alert",
+                "body": "Security Alert!\n\nWe noticed a login attempt from an unknown device.\n\nIf this wasn't you, verify your account immediately:\nlogin-secure-verify.com/auth\n\nAlternatively, click: bit.ly/free-money\n\nIgnoring this may result in account compromise.\n\nSecurity Team",
+                "sent_at": time.strftime('%Y-%m-%dT%H:%M:%S'),
+                "folder": "inbox",
+                "is_read": False
+            },
+            {
+                "id": base_id + 8,
+                "sender_email": "support@onlinestore.com",
+                "recipient_email": user_email,
+                "subject": "Your Order #12345 Has Been Shipped",
+                "body": "Great news!\n\nYour order #12345 has been shipped and is on its way.\n\nTracking number: 1Z999AA10123456784\nEstimated delivery: 3-5 business days\n\nTrack your package: https://onlinestore.com/track\n\nThank you for shopping with us!\n\nCustomer Support",
+                "sent_at": time.strftime('%Y-%m-%dT%H:%M:%S'),
+                "folder": "inbox",
+                "is_read": False
+            },
+            {
+                "id": base_id + 9,
+                "sender_email": "scam@urgent-action-required.net",
+                "recipient_email": user_email,
+                "subject": "Your Computer Has Been Infected!",
+                "body": "WARNING: VIRUS DETECTED!\n\nOur scan has detected 47 viruses on your computer!\n\nYour personal data is at risk!\n\nDownload our security tool NOW:\nurgent-action-required.net/download\n\nAlso verify at: tinyurl.com/verify-account\n\nACT IMMEDIATELY or lose all your files!\n\nTech Support",
+                "sent_at": time.strftime('%Y-%m-%dT%H:%M:%S'),
+                "folder": "inbox",
+                "is_read": False
+            },
+            {
+                "id": base_id + 10,
+                "sender_email": "friend@email.com",
+                "recipient_email": user_email,
+                "subject": "Lunch this weekend?",
+                "body": "Hey!\n\nIt's been a while since we caught up. Want to grab lunch this weekend?\n\nI was thinking that new Italian place downtown. Let me know what works for you!\n\nCheers",
+                "sent_at": time.strftime('%Y-%m-%dT%H:%M:%S'),
+                "folder": "inbox",
+                "is_read": False
+            }
+        ]
+
+        # Analyze each email and add security info
+        for email in demo_emails:
+            security_result = analyze_email(email['subject'], email['body'], email['sender_email'])
+            email['security_analysis'] = {
+                "badge": security_result['badge'],
+                "safe_score": security_result['safe_score'],
+                "warnings": security_result['warnings']
+            }
+            emails.append(email)
+
+        db_write('emails', emails)
 
     def handle_login(self, data):
         users = db_read('users')
