@@ -426,17 +426,28 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
     def handle_flag_sender(self, data):
         sender_email = data.get('sender_email')
         reason = data.get('reason')
+        user_email = data.get('user_email')
 
         reputation = db_read('reputation')
         sender_rep = next((r for r in reputation if r.get('sender_email') == sender_email), None)
 
         if sender_rep:
+            # Check if user already flagged this sender
+            flagged_by = sender_rep.get('flagged_by', [])
+            if user_email in flagged_by:
+                self._set_headers(400)
+                self.wfile.write(json.dumps({"success": False, "error": "You have already flagged this sender"}).encode())
+                return
+
             # Decrease safe score
             sender_rep['safe_score'] = max(0, sender_rep.get('safe_score', 50) - 10)
             sender_rep['total_flags'] = sender_rep.get('total_flags', 0) + 1
             if 'flag_reasons' not in sender_rep:
                 sender_rep['flag_reasons'] = []
             sender_rep['flag_reasons'].append(reason)
+            if 'flagged_by' not in sender_rep:
+                sender_rep['flagged_by'] = []
+            sender_rep['flagged_by'].append(user_email)
         else:
             # Create new reputation entry
             reputation.append({
@@ -444,7 +455,9 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                 "safe_score": 40,  # Start lower since flagged
                 "total_flags": 1,
                 "flag_reasons": [reason],
-                "marked_safe_count": 0
+                "marked_safe_count": 0,
+                "flagged_by": [user_email],
+                "marked_safe_by": []
             })
 
         db_write('reputation', reputation)
@@ -455,6 +468,7 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             "id": int(time.time() * 1000),
             "event_type": "sender_flagged",
             "sender_email": sender_email,
+            "flagged_by": user_email,
             "created_at": time.strftime('%Y-%m-%dT%H:%M:%S'),
             "severity": "high",
             "details": json.dumps({"reason": reason})
@@ -466,14 +480,25 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
 
     def handle_mark_sender_safe(self, data):
         sender_email = data.get('sender_email')
+        user_email = data.get('user_email')
 
         reputation = db_read('reputation')
         sender_rep = next((r for r in reputation if r.get('sender_email') == sender_email), None)
 
         if sender_rep:
+            # Check if user already marked this sender safe
+            marked_safe_by = sender_rep.get('marked_safe_by', [])
+            if user_email in marked_safe_by:
+                self._set_headers(400)
+                self.wfile.write(json.dumps({"success": False, "error": "You have already marked this sender as safe"}).encode())
+                return
+
             # Increase safe score
             sender_rep['safe_score'] = min(100, sender_rep.get('safe_score', 50) + 10)
             sender_rep['marked_safe_count'] = sender_rep.get('marked_safe_count', 0) + 1
+            if 'marked_safe_by' not in sender_rep:
+                sender_rep['marked_safe_by'] = []
+            sender_rep['marked_safe_by'].append(user_email)
         else:
             # Create new reputation entry with good score
             reputation.append({
@@ -481,7 +506,9 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
                 "safe_score": 70,  # Start higher since marked safe
                 "total_flags": 0,
                 "flag_reasons": [],
-                "marked_safe_count": 1
+                "marked_safe_count": 1,
+                "flagged_by": [],
+                "marked_safe_by": [user_email]
             })
 
         db_write('reputation', reputation)
@@ -493,12 +520,12 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         all_emails = db_read('emails')
 
         inbox = [e for e in all_emails if e.get('recipient_email') == email_addr and e.get('folder', 'inbox') == 'inbox']
-        read_count = len([e for e in inbox if e.get('is_read', False)])
+        unread_count = len([e for e in inbox if not e.get('is_read', False)])
         flagged = len([e for e in inbox if e.get('security_analysis', {}).get('badge', {}).get('color') == 'red'])
 
         stats = {
             "inbox": len(inbox),
-            "read": read_count,
+            "unread": unread_count,
             "flagged": flagged
         }
 

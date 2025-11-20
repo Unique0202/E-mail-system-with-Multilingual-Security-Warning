@@ -195,8 +195,13 @@ function displayEmailDetail(index) {
         const regex = new RegExp(`(${phish.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
         htmlBody = htmlBody.replace(regex, (match) => {
             return `<span class="unsafe-link-wrapper">
-                <a href="#" class="unsafe-link" onclick="event.preventDefault(); alert('${getTranslation('unsafe_link_details', lang1)}')">${match}</a>
-                <span class="link-tooltip">${getTranslation('unsafe_link_warning', lang1)}<br><small>${getTranslation('unsafe_link_details', lang1)}</small></span>
+                <a href="#" class="unsafe-link" onclick="event.preventDefault(); alert('${getTranslation('unsafe_link_details', lang1)}\\n\\n${getTranslation('unsafe_link_details', lang2)}')">${match}</a>
+                <span class="link-tooltip">
+                    <strong>${getTranslation('unsafe_link_warning', lang1)}</strong><br>
+                    <em>${getTranslation('unsafe_link_warning', lang2)}</em><br><br>
+                    <small>${getTranslation('unsafe_link_details', lang1)}</small><br>
+                    <small style="opacity: 0.8;">${getTranslation('unsafe_link_details', lang2)}</small>
+                </span>
             </span>`;
         });
     });
@@ -210,8 +215,13 @@ function displayEmailDetail(index) {
         const isUnsafe = isPhishingLink(url);
         if (isUnsafe) {
             return `<span class="unsafe-link-wrapper">
-                <a href="#" class="unsafe-link" onclick="event.preventDefault(); alert('${getTranslation('unsafe_link_details', lang1)}')">${url}</a>
-                <span class="link-tooltip">${getTranslation('unsafe_link_warning', lang1)}<br><small>${getTranslation('unsafe_link_details', lang1)}</small></span>
+                <a href="#" class="unsafe-link" onclick="event.preventDefault(); alert('${getTranslation('unsafe_link_details', lang1)}\\n\\n${getTranslation('unsafe_link_details', lang2)}')">${url}</a>
+                <span class="link-tooltip">
+                    <strong>${getTranslation('unsafe_link_warning', lang1)}</strong><br>
+                    <em>${getTranslation('unsafe_link_warning', lang2)}</em><br><br>
+                    <small>${getTranslation('unsafe_link_details', lang1)}</small><br>
+                    <small style="opacity: 0.8;">${getTranslation('unsafe_link_details', lang2)}</small>
+                </span>
             </span>`;
         } else {
             return `<a href="${url}" target="_blank" class="safe-link">${url}</a>`;
@@ -495,9 +505,9 @@ function backToList() {
 // Load email statistics
 async function loadEmailStats() {
     const stats = await window.api.getEmailStats();
-    if (stats.success) {
+    if (stats && stats.success) {
         document.getElementById('stat-inbox').textContent = stats.stats.inbox || 0;
-        document.getElementById('stat-unread').textContent = (stats.stats.inbox - stats.stats.read) || 0;
+        document.getElementById('stat-unread').textContent = stats.stats.unread || 0;
         document.getElementById('stat-flagged').textContent = stats.stats.flagged || 0;
     }
 }
