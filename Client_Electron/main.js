@@ -27,19 +27,26 @@ function createWindow() {
 // --- HTTP API HANDLER ---
 ipcMain.handle('api-request', async (event, { endpoint, method, body }) => {
     return new Promise((resolve) => {
-        const url = new URL(endpoint, SERVER_URL);
+        const url = new URL(SERVER_URL);
         const isHttps = url.protocol === 'https:';
         const httpModule = isHttps ? https : http;
+
+        // Prepare body data
+        const bodyData = (body && method !== 'GET') ? JSON.stringify(body) : '';
 
         const options = {
             hostname: url.hostname,
             port: url.port || (isHttps ? 443 : 80),
-            path: url.pathname + url.search,
+            path: endpoint,
             method: method,
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(bodyData)
             }
         };
+
+        console.log(`[REQUEST] ${method} ${url.hostname}:${url.port}${endpoint}`);
+        if (bodyData) console.log(`[BODY]:`, bodyData);
 
         const req = httpModule.request(options, (res) => {
             let resultData = '';
@@ -49,10 +56,15 @@ ipcMain.handle('api-request', async (event, { endpoint, method, body }) => {
             });
 
             res.on('end', async () => {
-                console.log(`[API] ${method} ${endpoint}`);
+                console.log(`[API] ${method} ${endpoint} - Status: ${res.statusCode}`);
                 console.log(`[RAW RESPONSE]:`, resultData);
 
                 try {
+                    if (!resultData || resultData.trim() === '') {
+                        resolve({ success: false, error: 'Empty response from server' });
+                        return;
+                    }
+
                     const cleanJson = resultData.trim();
                     const result = JSON.parse(cleanJson);
 
@@ -66,6 +78,7 @@ ipcMain.handle('api-request', async (event, { endpoint, method, body }) => {
                     resolve(result);
                 } catch (e) {
                     console.error("JSON Parse Error:", e);
+                    console.error("Raw data was:", resultData);
                     resolve({
                         success: false,
                         error: "Client Parse Error. Check Terminal for details."
@@ -82,8 +95,8 @@ ipcMain.handle('api-request', async (event, { endpoint, method, body }) => {
             });
         });
 
-        if (body && method !== 'GET') {
-            req.write(JSON.stringify(body));
+        if (bodyData) {
+            req.write(bodyData);
         }
 
         req.end();
