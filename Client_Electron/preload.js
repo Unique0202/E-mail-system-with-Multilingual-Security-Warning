@@ -47,6 +47,25 @@ contextBridge.exposeInMainWorld('api', {
         const user = JSON.parse(window.localStorage.getItem('currentUser'));
         return pythonCall(`/api/email/trash?email=${user.email}`, 'GET');
     },
+    markNotSpam: (emailId) => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall('/api/email/not_spam', 'POST', { email_id: emailId, user_email: user.email });
+    },
+    restoreEmail: (emailId) => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall('/api/email/restore', 'POST', { email_id: emailId, user_email: user.email });
+    },
+    deletePermanently: (emailId) => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall('/api/email/delete_permanent', 'POST', { email_id: emailId, user_email: user.email });
+    },
+    blockSender: (senderEmail) => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall('/api/sender/block', 'POST', { sender_email: senderEmail, user_email: user.email });
+    },
+    markAsRead: (emailId) => {
+        return pythonCall('/api/email/mark_read', 'POST', { email_id: emailId });
+    },
 
     // Sender Reputation
     flagSender: (senderEmail, reason) => {

@@ -545,11 +545,25 @@
 
                 <div id="security-warnings" class="warnings-box hidden"></div>
 
-                <div class="email-actions">
+                <!-- Inbox Actions -->
+                <div id="inbox-actions" class="email-actions">
                     <button id="btn-mark-spam">🚫 Mark as Spam</button>
                     <button id="btn-delete-email">🗑️ Delete</button>
                     <button id="btn-flag-sender">⚠️ Flag Sender</button>
                     <button id="btn-mark-safe">✅ Mark Safe</button>
+                </div>
+
+                <!-- Spam Actions -->
+                <div id="spam-actions" class="email-actions hidden">
+                    <button id="btn-not-spam">📥 Not Spam</button>
+                    <button id="btn-block-sender">🚫 Block Sender</button>
+                    <button id="btn-delete-spam">🗑️ Delete</button>
+                </div>
+
+                <!-- Trash Actions -->
+                <div id="trash-actions" class="email-actions hidden">
+                    <button id="btn-restore">📥 Restore</button>
+                    <button id="btn-delete-permanent">🗑️ Delete Permanently</button>
                 </div>
 
                 <div id="detail-body" class="email-body"></div>

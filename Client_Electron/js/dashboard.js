@@ -3,6 +3,7 @@ let currentEmails = [];
 let currentDetailEmail = null;
 let currentDetailIndex = null;
 let pendingEmailIndex = null;
+let currentFolder = 'inbox'; // Track current folder
 
 // Predefined phishing links (must match server)
 const PHISHING_LINKS = [
@@ -174,6 +175,26 @@ function displayEmailDetail(index) {
     currentDetailIndex = index;
     switchView('view-email-detail');
 
+    // Mark email as read and update stats
+    if (email.id && !email.is_read) {
+        window.api.markAsRead(email.id).then(() => {
+            loadEmailStats();
+        });
+    }
+
+    // Show/hide folder-specific buttons
+    document.getElementById('inbox-actions').classList.add('hidden');
+    document.getElementById('spam-actions').classList.add('hidden');
+    document.getElementById('trash-actions').classList.add('hidden');
+
+    if (currentFolder === 'spam') {
+        document.getElementById('spam-actions').classList.remove('hidden');
+    } else if (currentFolder === 'trash') {
+        document.getElementById('trash-actions').classList.remove('hidden');
+    } else {
+        document.getElementById('inbox-actions').classList.remove('hidden');
+    }
+
     // Get user languages for tooltips
     const languages = currentUser.languages || ['en', 'en'];
     const lang1 = languages[0] || 'en';
@@ -285,6 +306,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-flag-sender').addEventListener('click', flagCurrentSender);
     document.getElementById('btn-mark-safe').addEventListener('click', markCurrentSenderSafe);
 
+    // Spam folder buttons
+    document.getElementById('btn-not-spam').addEventListener('click', markNotSpam);
+    document.getElementById('btn-block-sender').addEventListener('click', blockSender);
+    document.getElementById('btn-delete-spam').addEventListener('click', deleteCurrentEmail);
+
+    // Trash folder buttons
+    document.getElementById('btn-restore').addEventListener('click', restoreEmail);
+    document.getElementById('btn-delete-permanent').addEventListener('click', deletePermanently);
+
     document.getElementById('nav-spam').addEventListener('click', loadSpam);
     document.getElementById('nav-trash').addEventListener('click', loadTrash);
     document.getElementById('nav-subscriptions').addEventListener('click', loadSubscriptions);
@@ -330,6 +360,7 @@ function switchView(viewName) {
 async function loadInbox() {
     switchView('view-list');
     document.getElementById('folder-title').innerText = "Inbox";
+    currentFolder = 'inbox';
     const emails = await window.api.getInbox();
     currentEmails = emails;
     renderList(emails, true);
@@ -516,16 +547,17 @@ async function loadEmailStats() {
 async function loadSpam() {
     switchView('view-list');
     document.getElementById('folder-title').innerText = "Spam";
+    currentFolder = 'spam';
     const emails = await window.api.getSpam();
     currentEmails = emails;
     renderList(emails, true);
-    
-    // Update active nav
     setActiveNav('nav-spam');
 }
+
 // Trash management
 async function loadTrash() {
     switchView('view-list');
+    currentFolder = 'trash';
     document.getElementById('folder-title').innerText = "Trash";
     // You'll need to implement getTrash method
     const emails = await window.api.getTrash();
@@ -607,12 +639,72 @@ async function markCurrentAsSpam() {
 
 async function deleteCurrentEmail() {
     if (!currentDetailEmail) return;
-    
+
     if (confirm('Are you sure you want to delete this email?')) {
         const result = await window.api.deleteEmail(currentDetailEmail.id);
         if (result.success) {
             alert('Email moved to trash!');
             backToList();
+            loadEmailStats();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    }
+}
+
+// Spam folder actions
+async function markNotSpam() {
+    if (!currentDetailEmail) return;
+
+    const result = await window.api.markNotSpam(currentDetailEmail.id);
+    if (result.success) {
+        alert('Email moved to inbox!');
+        backToList();
+        loadSpam();
+    } else {
+        alert('Error: ' + result.error);
+    }
+}
+
+async function blockSender() {
+    if (!currentDetailEmail) return;
+
+    const senderEmail = currentDetailEmail.sender_email;
+    if (confirm(`Are you sure you want to block ${senderEmail}? You will no longer receive emails from this sender.`)) {
+        const result = await window.api.blockSender(senderEmail);
+        if (result.success) {
+            alert('Sender blocked successfully!');
+            backToList();
+            loadSpam();
+        } else {
+            alert('Error: ' + result.error);
+        }
+    }
+}
+
+// Trash folder actions
+async function restoreEmail() {
+    if (!currentDetailEmail) return;
+
+    const result = await window.api.restoreEmail(currentDetailEmail.id);
+    if (result.success) {
+        alert('Email restored to inbox!');
+        backToList();
+        loadTrash();
+    } else {
+        alert('Error: ' + result.error);
+    }
+}
+
+async function deletePermanently() {
+    if (!currentDetailEmail) return;
+
+    if (confirm('Are you sure you want to permanently delete this email? This action cannot be undone.')) {
+        const result = await window.api.deletePermanently(currentDetailEmail.id);
+        if (result.success) {
+            alert('Email permanently deleted!');
+            backToList();
+            loadTrash();
         } else {
             alert('Error: ' + result.error);
         }

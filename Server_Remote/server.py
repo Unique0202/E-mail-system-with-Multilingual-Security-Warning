@@ -205,6 +205,16 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
             self.handle_verify_link(data)
         elif self.path == '/api/unsubscribe':
             self.handle_unsubscribe(data)
+        elif self.path == '/api/email/not_spam':
+            self.handle_not_spam(data)
+        elif self.path == '/api/email/restore':
+            self.handle_restore_email(data)
+        elif self.path == '/api/email/delete_permanent':
+            self.handle_delete_permanent(data)
+        elif self.path == '/api/sender/block':
+            self.handle_block_sender(data)
+        elif self.path == '/api/email/mark_read':
+            self.handle_mark_read(data)
         else:
             self._set_headers(404)
 
@@ -316,9 +326,14 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
         email_addr = params.get('email', [None])[0]
         all_emails = db_read('emails')
         reputation = db_read('reputation')
+        users = db_read('users')
 
-        # Return emails where recipient matches and folder is inbox
-        inbox = [e for e in all_emails if e.get('recipient_email') == email_addr and e.get('folder', 'inbox') == 'inbox']
+        # Get blocked senders for this user
+        user = next((u for u in users if u.get('email') == email_addr), None)
+        blocked_senders = user.get('blocked_senders', []) if user else []
+
+        # Return emails where recipient matches, folder is inbox, and sender not blocked
+        inbox = [e for e in all_emails if e.get('recipient_email') == email_addr and e.get('folder', 'inbox') == 'inbox' and e.get('sender_email') not in blocked_senders]
 
         # Recalculate security based on current sender reputation and content
         for email in inbox:
@@ -518,8 +533,14 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
     def handle_get_stats(self, params):
         email_addr = params.get('email', [None])[0]
         all_emails = db_read('emails')
+        users = db_read('users')
 
-        inbox = [e for e in all_emails if e.get('recipient_email') == email_addr and e.get('folder', 'inbox') == 'inbox']
+        # Get blocked senders for this user
+        user = next((u for u in users if u.get('email') == email_addr), None)
+        blocked_senders = user.get('blocked_senders', []) if user else []
+
+        # Filter inbox emails (excluding blocked senders)
+        inbox = [e for e in all_emails if e.get('recipient_email') == email_addr and e.get('folder', 'inbox') == 'inbox' and e.get('sender_email') not in blocked_senders]
         unread_count = len([e for e in inbox if not e.get('is_read', False)])
         flagged = len([e for e in inbox if e.get('security_analysis', {}).get('badge', {}).get('color') == 'red'])
 
@@ -581,6 +602,80 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
 
     def handle_unsubscribe(self, data):
         # Placeholder - return success
+        self._set_headers(200)
+        self.wfile.write(json.dumps({"success": True}).encode())
+
+    def handle_not_spam(self, data):
+        email_id = data.get('email_id')
+        emails = db_read('emails')
+
+        for email in emails:
+            if email.get('id') == email_id:
+                email['folder'] = 'inbox'
+                break
+
+        db_write('emails', emails)
+        self._set_headers(200)
+        self.wfile.write(json.dumps({"success": True}).encode())
+
+    def handle_restore_email(self, data):
+        email_id = data.get('email_id')
+        emails = db_read('emails')
+
+        for email in emails:
+            if email.get('id') == email_id:
+                email['folder'] = 'inbox'
+                break
+
+        db_write('emails', emails)
+        self._set_headers(200)
+        self.wfile.write(json.dumps({"success": True}).encode())
+
+    def handle_delete_permanent(self, data):
+        email_id = data.get('email_id')
+        emails = db_read('emails')
+
+        # Remove the email permanently
+        emails = [e for e in emails if e.get('id') != email_id]
+
+        db_write('emails', emails)
+        self._set_headers(200)
+        self.wfile.write(json.dumps({"success": True}).encode())
+
+    def handle_block_sender(self, data):
+        sender_email = data.get('sender_email')
+        user_email = data.get('user_email')
+
+        # Add to blocked senders list in user data
+        users = db_read('users')
+        for user in users:
+            if user.get('email') == user_email:
+                if 'blocked_senders' not in user:
+                    user['blocked_senders'] = []
+                if sender_email not in user['blocked_senders']:
+                    user['blocked_senders'].append(sender_email)
+                break
+
+        db_write('users', users)
+
+        # Delete all emails from this sender
+        emails = db_read('emails')
+        emails = [e for e in emails if not (e.get('sender_email') == sender_email and e.get('recipient_email') == user_email)]
+        db_write('emails', emails)
+
+        self._set_headers(200)
+        self.wfile.write(json.dumps({"success": True}).encode())
+
+    def handle_mark_read(self, data):
+        email_id = data.get('email_id')
+        emails = db_read('emails')
+
+        for email in emails:
+            if email.get('id') == email_id:
+                email['is_read'] = True
+                break
+
+        db_write('emails', emails)
         self._set_headers(200)
         self.wfile.write(json.dumps({"success": True}).encode())
 
