@@ -2,6 +2,191 @@ let currentUser = null;
 let currentEmails = [];
 let currentDetailEmail = null;
 let currentDetailIndex = null;
+let pendingEmailIndex = null;
+
+// Multilingual Warning Translations
+const WARNING_TRANSLATIONS = {
+    'phishing_warning': {
+        'en': 'Warning: This email may be a phishing attempt',
+        'hi': 'चेतावनी: यह ईमेल फ़िशिंग का प्रयास हो सकता है',
+        'bn': 'সতর্কতা: এই ইমেলটি ফিশিং প্রচেষ্টা হতে পারে',
+        'te': 'హెచ్చరిక: ఈ ఇమెయిల్ ఫిషింగ్ ప్రయత్నం కావచ్చు',
+        'mr': 'चेतावणी: हा ईमेल फिशिंग प्रयत्न असू शकतो',
+        'ta': 'எச்சரிக்கை: இந்த மின்னஞ்சல் ஃபிஷிங் முயற்சியாக இருக்கலாம்',
+        'es': 'Advertencia: Este correo puede ser un intento de phishing',
+        'fr': 'Avertissement: Cet email peut être une tentative de phishing'
+    },
+    'unsafe_link_warning': {
+        'en': 'Dangerous Link Detected',
+        'hi': 'खतरनाक लिंक पाया गया',
+        'bn': 'বিপজ্জনক লিঙ্ক সনাক্ত করা হয়েছে',
+        'te': 'ప్రమాదకరమైన లింక్ కనుగొనబడింది',
+        'mr': 'धोकादायक दुवा आढळला',
+        'ta': 'ஆபத்தான இணைப்பு கண்டறியப்பட்டது',
+        'es': 'Enlace Peligroso Detectado',
+        'fr': 'Lien Dangereux Détecté'
+    },
+    'unsafe_link_details': {
+        'en': 'This link has been identified as potentially harmful. Do not click.',
+        'hi': 'इस लिंक को संभावित रूप से हानिकारक के रूप में पहचाना गया है। क्लिक न करें।',
+        'bn': 'এই লিঙ্কটি সম্ভাব্য ক্ষতিকারক হিসাবে চিহ্নিত করা হয়েছে। ক্লিক করবেন না।',
+        'te': 'ఈ లింక్ హానికరంగా గుర్తించబడింది. క్లిక్ చేయవద్దు.',
+        'mr': 'हा दुवा संभाव्य हानिकारक म्हणून ओळखला गेला आहे. क्लिक करू नका.',
+        'ta': 'இந்த இணைப்பு தீங்கு விளைவிக்கக்கூடியது என அடையாளம் காணப்பட்டுள்ளது. கிளிக் செய்ய வேண்டாம்.',
+        'es': 'Este enlace ha sido identificado como potencialmente dañino. No haga clic.',
+        'fr': 'Ce lien a été identifié comme potentiellement dangereux. Ne cliquez pas.'
+    },
+    'suspicious_sender': {
+        'en': 'Suspicious Sender',
+        'hi': 'संदिग्ध प्रेषक',
+        'bn': 'সন্দেহজনক প্রেরক',
+        'te': 'అనుమానాస్పద పంపినవారు',
+        'mr': 'संशयास्पद प्रेषक',
+        'ta': 'சந்தேகத்திற்குரிய அனுப்புநர்',
+        'es': 'Remitente Sospechoso',
+        'fr': 'Expéditeur Suspect'
+    },
+    'suspicious_sender_details': {
+        'en': 'This sender has a low reputation score. Exercise caution.',
+        'hi': 'इस प्रेषक का प्रतिष्ठा स्कोर कम है। सावधानी बरतें।',
+        'bn': 'এই প্রেরকের খ্যাতি স্কোর কম। সতর্কতা অবলম্বন করুন।',
+        'te': 'ఈ పంపినవారికి తక్కువ ఖ్యాతి స్కోర్ ఉంది. జాగ్రత్త వహించండి.',
+        'mr': 'या प्रेषकाचा प्रतिष्ठा स्कोर कमी आहे. सावधगिरी बाळगा.',
+        'ta': 'இந்த அனுப்புநரின் நற்பெயர் மதிப்பெண் குறைவு. எச்சரிக்கையாக இருங்கள்.',
+        'es': 'Este remitente tiene una puntuación de reputación baja. Tenga cuidado.',
+        'fr': 'Cet expéditeur a un score de réputation faible. Soyez prudent.'
+    },
+    'spam_warning': {
+        'en': 'Possible Spam',
+        'hi': 'संभावित स्पैम',
+        'bn': 'সম্ভাব্য স্প্যাম',
+        'te': 'స్పామ్ కావచ్చు',
+        'mr': 'संभाव्य स्पॅम',
+        'ta': 'ஸ்பேம் இருக்கலாம்',
+        'es': 'Posible Spam',
+        'fr': 'Spam Possible'
+    }
+};
+
+function getTranslation(key, language) {
+    const translations = WARNING_TRANSLATIONS[key] || {};
+    return translations[language] || translations['en'] || key;
+}
+
+function showSecurityWarningModal(email, index) {
+    const security = email.security_analysis || {};
+    const warnings = security.warnings || [];
+    const safeScore = security.safe_score || 50;
+
+    // Get user languages
+    const languages = currentUser.languages || ['en', 'en'];
+    const lang1 = languages[0] || 'en';
+    const lang2 = languages[1] || 'en';
+
+    // Build warning content
+    const modalWarnings = document.getElementById('modal-warnings');
+    modalWarnings.innerHTML = '';
+
+    let hasWarnings = false;
+
+    // Check for low safe score warning
+    if (safeScore < 40) {
+        hasWarnings = true;
+        const warningDiv = document.createElement('div');
+        warningDiv.className = 'warning-item';
+        warningDiv.innerHTML = `
+            <div class="warning-item-title">${getTranslation('suspicious_sender', lang1)}</div>
+            <div class="warning-item-secondary">${getTranslation('suspicious_sender', lang2)}</div>
+            <div style="margin-top: 10px; font-size: 0.9rem;">${getTranslation('suspicious_sender_details', lang1)}</div>
+            <div class="warning-item-secondary">${getTranslation('suspicious_sender_details', lang2)}</div>
+        `;
+        modalWarnings.appendChild(warningDiv);
+    }
+
+    // Check for phishing links in warnings
+    warnings.forEach(warning => {
+        if (warning.severity === 'high') {
+            hasWarnings = true;
+            const title = warning.title?.primary || '';
+
+            // Check if it's a phishing link warning
+            if (title.toLowerCase().includes('phishing') || title.toLowerCase().includes('link')) {
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'warning-item';
+                warningDiv.innerHTML = `
+                    <div class="warning-item-title">${getTranslation('unsafe_link_warning', lang1)}</div>
+                    <div class="warning-item-secondary">${getTranslation('unsafe_link_warning', lang2)}</div>
+                    <div style="margin-top: 10px; font-size: 0.9rem;">${getTranslation('unsafe_link_details', lang1)}</div>
+                    <div class="warning-item-secondary">${getTranslation('unsafe_link_details', lang2)}</div>
+                `;
+                modalWarnings.appendChild(warningDiv);
+            } else {
+                // Generic high severity warning
+                const warningDiv = document.createElement('div');
+                warningDiv.className = 'warning-item';
+                warningDiv.innerHTML = `
+                    <div class="warning-item-title">${getTranslation('phishing_warning', lang1)}</div>
+                    <div class="warning-item-secondary">${getTranslation('phishing_warning', lang2)}</div>
+                    <div style="margin-top: 10px; font-size: 0.9rem;">${warning.details?.primary || ''}</div>
+                `;
+                modalWarnings.appendChild(warningDiv);
+            }
+        }
+    });
+
+    if (!hasWarnings) {
+        // No warnings, proceed directly
+        displayEmailDetail(index);
+        return;
+    }
+
+    // Store pending index and show modal
+    pendingEmailIndex = index;
+    document.getElementById('security-warning-modal').classList.remove('hidden');
+}
+
+function displayEmailDetail(index) {
+    const email = currentEmails[index];
+    currentDetailEmail = email;
+    currentDetailIndex = index;
+    switchView('view-email-detail');
+
+    document.getElementById('detail-subject').innerText = email.subject || 'No Subject';
+    document.getElementById('detail-from').innerText = email.sender_email || 'Unknown';
+    document.getElementById('detail-to').innerText = email.recipient_email || 'Unknown';
+    document.getElementById('detail-date').innerText = email.sent_at ? new Date(email.sent_at).toLocaleString() : 'Unknown';
+    document.getElementById('detail-body').innerText = email.body || '';
+
+    // Display security information
+    const security = email.security_analysis || {};
+    const badgeData = security.badge || { color: 'green', icon: '✓', title_primary: 'Safe', title_secondary: '' };
+    const badge = document.getElementById('security-badge');
+    const warnings = document.getElementById('security-warnings');
+
+    warnings.classList.add('hidden');
+    warnings.innerHTML = '';
+
+    badge.className = `badge badge-${badgeData.color || 'green'}`;
+    badge.innerHTML = `
+        ${badgeData.icon || '✓'} ${badgeData.title_primary || 'Safe'}
+        <br><small>${badgeData.title_secondary || ''}</small>
+    `;
+
+    if (security.warnings && security.warnings.length > 0) {
+        warnings.classList.remove('hidden');
+        security.warnings.forEach(warning => {
+            const warningDiv = document.createElement('div');
+            warningDiv.className = `warning-${warning.severity || 'medium'}`;
+            const title = warning.title ? (warning.title.primary || '') : '';
+            const details = warning.details ? (warning.details.primary || '') : '';
+            warningDiv.innerHTML = `
+                <strong>${title}</strong>
+                <br><small>${details}</small>
+            `;
+            warnings.appendChild(warningDiv);
+        });
+    }
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Get Session from Backend
@@ -36,6 +221,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (navUnread) {
         navUnread.addEventListener('click', loadUnread);
     }
+
+    // Modal button listeners
+    document.getElementById('modal-go-back').addEventListener('click', () => {
+        document.getElementById('security-warning-modal').classList.add('hidden');
+        pendingEmailIndex = null;
+    });
+
+    document.getElementById('modal-proceed').addEventListener('click', () => {
+        document.getElementById('security-warning-modal').classList.add('hidden');
+        if (pendingEmailIndex !== null) {
+            displayEmailDetail(pendingEmailIndex);
+            pendingEmailIndex = null;
+        }
+    });
 
     // 3. Initial Load
     loadInbox();
@@ -173,45 +372,7 @@ async function sendEmail() {
 
 function openEmailDetail(index) {
     const email = currentEmails[index];
-    currentDetailEmail = email;
-    currentDetailIndex = index;
-    switchView('view-email-detail');
-
-    document.getElementById('detail-subject').innerText = email.subject || 'No Subject';
-    document.getElementById('detail-from').innerText = email.sender_email || 'Unknown';
-    document.getElementById('detail-to').innerText = email.recipient_email || 'Unknown';
-    document.getElementById('detail-date').innerText = email.sent_at ? new Date(email.sent_at).toLocaleString() : 'Unknown';
-    document.getElementById('detail-body').innerText = email.body || '';
-
-    // Display security information
-    const security = email.security_analysis || {};
-    const badgeData = security.badge || { color: 'green', icon: '✓', title_primary: 'Safe', title_secondary: '' };
-    const badge = document.getElementById('security-badge');
-    const warnings = document.getElementById('security-warnings');
-
-    warnings.classList.add('hidden');
-    warnings.innerHTML = '';
-
-    badge.className = `badge badge-${badgeData.color || 'green'}`;
-    badge.innerHTML = `
-        ${badgeData.icon || '✓'} ${badgeData.title_primary || 'Safe'}
-        <br><small>${badgeData.title_secondary || ''}</small>
-    `;
-
-    if (security.warnings && security.warnings.length > 0) {
-        warnings.classList.remove('hidden');
-        security.warnings.forEach(warning => {
-            const warningDiv = document.createElement('div');
-            warningDiv.className = `warning-${warning.severity || 'medium'}`;
-            const title = warning.title ? (warning.title.primary || '') : '';
-            const details = warning.details ? (warning.details.primary || '') : '';
-            warningDiv.innerHTML = `
-                <strong>${title}</strong>
-                <br><small>${details}</small>
-            `;
-            warnings.appendChild(warningDiv);
-        });
-    }
+    showSecurityWarningModal(email, index);
 }
 
 async function flagCurrentSender() {
