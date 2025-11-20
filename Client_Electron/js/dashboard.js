@@ -31,6 +31,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('nav-trash').addEventListener('click', loadTrash);
     document.getElementById('nav-subscriptions').addEventListener('click', loadSubscriptions);
 
+    // Add unread listener if element exists
+    const navUnread = document.getElementById('nav-unread');
+    if (navUnread) {
+        navUnread.addEventListener('click', loadUnread);
+    }
+
     // 3. Initial Load
     loadInbox();
     // Setup email actions
@@ -55,6 +61,7 @@ async function loadInbox() {
     const emails = await window.api.getInbox();
     currentEmails = emails;
     renderList(emails, true);
+    setActiveNav('nav-inbox');
 }
 
 async function loadSent() {
@@ -63,6 +70,18 @@ async function loadSent() {
     const emails = await window.api.getSent();
     currentEmails = emails;
     renderList(emails, false);
+    setActiveNav('nav-sent');
+}
+
+async function loadUnread() {
+    switchView('view-list');
+    document.getElementById('folder-title').innerText = "Unread";
+    const emails = await window.api.getInbox();
+    // Filter only unread emails
+    const unreadEmails = emails.filter(e => !e.is_read);
+    currentEmails = unreadEmails;
+    renderList(unreadEmails, true);
+    setActiveNav('nav-unread');
 }
 
 function renderList(emails, isInbox) {
@@ -104,6 +123,7 @@ function showCompose() {
     document.getElementById('comp-subject').value = '';
     document.getElementById('comp-body').value = '';
     document.getElementById('link-warnings').classList.add('hidden');
+    setActiveNav('nav-compose');
 }
 
 async function scanLinksForThreats() {
@@ -224,9 +244,10 @@ async function markCurrentSenderSafe() {
 
 async function showSecurityReport() {
     switchView('view-security');
+    setActiveNav('nav-security');
     const report = await window.api.getSecurityReport();
     const container = document.getElementById('security-report');
-    
+
     if (report.success) {
         container.innerHTML = '<h3>Recent Security Events</h3>';
         report.logs.forEach(log => {

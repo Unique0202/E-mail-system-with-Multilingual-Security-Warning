@@ -316,8 +316,46 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
     def handle_get_inbox(self, params):
         email_addr = params.get('email', [None])[0]
         all_emails = db_read('emails')
+        reputation = db_read('reputation')
+
         # Return emails where recipient matches and folder is inbox
         inbox = [e for e in all_emails if e.get('recipient_email') == email_addr and e.get('folder', 'inbox') == 'inbox']
+
+        # Recalculate security based on current sender reputation and content
+        for email in inbox:
+            sender = email.get('sender_email')
+            body = email.get('body', '')
+            subject = email.get('subject', '')
+
+            # Re-analyze email content for warnings
+            security_result = analyze_email(subject, body, sender)
+
+            # Merge with reputation data
+            if sender:
+                sender_rep = next((r for r in reputation if r.get('sender_email') == sender), None)
+                if sender_rep:
+                    rep_score = sender_rep.get('safe_score', 50)
+                    security_result['safe_score'] = rep_score
+
+                    # Update badge based on reputation score
+                    if rep_score >= 70:
+                        security_result['badge'] = {
+                            "color": "green", "icon": "✓",
+                            "title_primary": "Safe", "title_secondary": "Verified Safe"
+                        }
+                    elif rep_score >= 40:
+                        security_result['badge'] = {
+                            "color": "yellow", "icon": "⚠",
+                            "title_primary": "Caution", "title_secondary": "Exercise Caution"
+                        }
+                    else:
+                        security_result['badge'] = {
+                            "color": "red", "icon": "✗",
+                            "title_primary": "Dangerous", "title_secondary": "High Risk"
+                        }
+
+            email['security_analysis'] = security_result
+
         self._set_headers(200)
         self.wfile.write(json.dumps(inbox).encode())
 
@@ -331,7 +369,25 @@ class RequestHandler(http.server.BaseHTTPRequestHandler):
     def handle_get_spam(self, params):
         email_addr = params.get('email', [None])[0]
         all_emails = db_read('emails')
+        reputation = db_read('reputation')
         spam = [e for e in all_emails if e.get('recipient_email') == email_addr and e.get('folder') == 'spam']
+
+        # Recalculate security with spam warning
+        for email in spam:
+            sender = email.get('sender_email')
+            body = email.get('body', '')
+            subject = email.get('subject', '')
+            security_result = analyze_email(subject, body, sender)
+
+            # Add spam warning
+            security_result['warnings'].insert(0, {
+                "severity": "high",
+                "title": {"primary": "Spam Email", "secondary": ""},
+                "details": {"primary": "This email was marked as spam", "secondary": ""}
+            })
+
+            email['security_analysis'] = security_result
+
         self._set_headers(200)
         self.wfile.write(json.dumps(spam).encode())
 
