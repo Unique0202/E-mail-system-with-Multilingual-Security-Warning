@@ -30,9 +30,59 @@ contextBridge.exposeInMainWorld('api', {
     },
     sendEmail: (data) => pythonCall('/api/email/send', 'POST', data),
 
+    // Email Actions
+    markAsSpam: (emailId, reason) => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall('/api/email/mark_spam', 'POST', { email_id: emailId, reason, user_email: user.email });
+    },
+    deleteEmail: (emailId) => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall('/api/email/delete', 'POST', { email_id: emailId, user_email: user.email });
+    },
+    getSpam: () => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall(`/api/email/spam?email=${user.email}`, 'GET');
+    },
+    getTrash: () => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall(`/api/email/trash?email=${user.email}`, 'GET');
+    },
+
+    // Sender Reputation
+    flagSender: (senderEmail, reason) => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall('/api/reputation/flag', 'POST', { sender_email: senderEmail, reason, user_email: user.email });
+    },
+    markSenderSafe: (senderEmail) => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall('/api/reputation/mark_safe', 'POST', { sender_email: senderEmail, user_email: user.email });
+    },
+
+    // Security
+    getSecurityReport: () => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall(`/api/security/report?email=${user.email}`, 'GET');
+    },
+    getEmailStats: () => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall(`/api/email/stats?email=${user.email}`, 'GET');
+    },
+    verifyLink: (url) => {
+        return pythonCall('/api/security/verify_link', 'POST', { url });
+    },
+
+    // Subscriptions
+    getSubscriptions: () => {
+        const user = JSON.parse(window.localStorage.getItem('currentUser'));
+        return pythonCall(`/api/subscriptions?email=${user.email}`, 'GET');
+    },
+    unsubscribe: (token) => {
+        return pythonCall('/api/unsubscribe', 'POST', { token });
+    },
+
     // Extras (Client-side generation for QR to avoid server deps)
     generateQR: async (text) => {
         // You might need a lightweight JS QR lib here or handle it in renderer
-        return "QR_CODE_DATA_URL"; 
+        return "QR_CODE_DATA_URL";
     }
 });

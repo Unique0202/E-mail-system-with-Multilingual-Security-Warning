@@ -6,7 +6,7 @@ import urllib.error
 # --- CONFIGURATION ---
 # If running locally for testing, use localhost. 
 # If running on remote, use that IP.
-SERVER_URL = "http://192.168.2.234:3000" 
+SERVER_URL = "http://0.0.0.0:3000" 
 
 def make_request(endpoint, method, payload=None):
     url = f"{SERVER_URL}{endpoint}"

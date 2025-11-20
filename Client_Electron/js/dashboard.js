@@ -1,5 +1,7 @@
 let currentUser = null;
 let currentEmails = [];
+let currentDetailEmail = null;
+let currentDetailIndex = null;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // 1. Get Session from Backend
@@ -137,9 +139,10 @@ async function sendEmail() {
     const to = document.getElementById('comp-to').value;
     const subject = document.getElementById('comp-subject').value;
     const body = document.getElementById('comp-body').value;
+    const from = currentUser.email;
 
-    const res = await window.api.sendEmail({ to, subject, body });
-    
+    const res = await window.api.sendEmail({ from, to, subject, body });
+
     if (res.success) {
         alert('Email sent securely!');
         loadSent();
@@ -150,41 +153,44 @@ async function sendEmail() {
 
 function openEmailDetail(index) {
     const email = currentEmails[index];
+    currentDetailEmail = email;
+    currentDetailIndex = index;
     switchView('view-email-detail');
-    
-    document.getElementById('detail-subject').innerText = email.subject;
-    document.getElementById('detail-from').innerText = email.sender_email;
-    document.getElementById('detail-to').innerText = email.recipient_email;
-    document.getElementById('detail-date').innerText = new Date(email.sent_at).toLocaleString();
-    document.getElementById('detail-body').innerText = email.body;
+
+    document.getElementById('detail-subject').innerText = email.subject || 'No Subject';
+    document.getElementById('detail-from').innerText = email.sender_email || 'Unknown';
+    document.getElementById('detail-to').innerText = email.recipient_email || 'Unknown';
+    document.getElementById('detail-date').innerText = email.sent_at ? new Date(email.sent_at).toLocaleString() : 'Unknown';
+    document.getElementById('detail-body').innerText = email.body || '';
 
     // Display security information
-    const security = email.security_analysis;
+    const security = email.security_analysis || {};
+    const badgeData = security.badge || { color: 'green', icon: '✓', title_primary: 'Safe', title_secondary: '' };
     const badge = document.getElementById('security-badge');
     const warnings = document.getElementById('security-warnings');
-    
+
     warnings.classList.add('hidden');
     warnings.innerHTML = '';
 
-    if (security) {
-        badge.className = `badge badge-${security.badge.color}`;
-        badge.innerHTML = `
-            ${security.badge.icon} ${security.badge.title_primary}
-            <br><small>${security.badge.title_secondary}</small>
-        `;
+    badge.className = `badge badge-${badgeData.color || 'green'}`;
+    badge.innerHTML = `
+        ${badgeData.icon || '✓'} ${badgeData.title_primary || 'Safe'}
+        <br><small>${badgeData.title_secondary || ''}</small>
+    `;
 
-        if (security.warnings && security.warnings.length > 0) {
-            warnings.classList.remove('hidden');
-            security.warnings.forEach(warning => {
-                const warningDiv = document.createElement('div');
-                warningDiv.className = `warning-${warning.severity}`;
-                warningDiv.innerHTML = `
-                    <strong>${warning.title.primary}</strong>
-                    <br><small>${warning.details.primary}</small>
-                `;
-                warnings.appendChild(warningDiv);
-            });
-        }
+    if (security.warnings && security.warnings.length > 0) {
+        warnings.classList.remove('hidden');
+        security.warnings.forEach(warning => {
+            const warningDiv = document.createElement('div');
+            warningDiv.className = `warning-${warning.severity || 'medium'}`;
+            const title = warning.title ? (warning.title.primary || '') : '';
+            const details = warning.details ? (warning.details.primary || '') : '';
+            warningDiv.innerHTML = `
+                <strong>${title}</strong>
+                <br><small>${details}</small>
+            `;
+            warnings.appendChild(warningDiv);
+        });
     }
 }
 
@@ -205,8 +211,8 @@ async function flagCurrentSender() {
 
 async function markCurrentSenderSafe() {
     const email = document.getElementById('detail-from').innerText;
-    const result = await window.api.flagSender(email, "marked_safe");
-    
+    const result = await window.api.markSenderSafe(email);
+
     if (result.success) {
         alert('Sender marked as safe!');
         loadInbox();
@@ -326,7 +332,6 @@ async function loadSubscriptions() {
 function setupEmailActions() {
     document.getElementById('btn-mark-spam').addEventListener('click', markCurrentAsSpam);
     document.getElementById('btn-delete-email').addEventListener('click', deleteCurrentEmail);
-    document.getElementById('btn-flag-email').addEventListener('click', flagCurrentEmail);
 }
 async function markCurrentAsSpam() {
     if (!currentDetailEmail) return;
